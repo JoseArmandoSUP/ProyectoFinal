@@ -136,26 +136,26 @@ INSERT INTO clientes (nombre, apellido_p, apellido_m, telefono, email, calle, cp
 SELECT * FROM clientes;
 
 INSERT INTO empleados (nombre, apellido_p, apellido_m, salario, fecha_contratacion, sucursal_id) VALUES
-('Empleado1','Perez','Lopez',8000,'2023-01-01',1),
-('Empleado2','Gomez','Martinez',8200,'2023-01-02',2),
-('Empleado3','Hernandez','Diaz',8300,'2023-01-03',3),
-('Empleado4','Lopez','Garcia',8400,'2023-01-04',4),
-('Empleado5','Sanchez','Torres',8500,'2023-01-05',5),
-('Empleado6','Ramirez','Flores',8600,'2023-01-06',6),
-('Empleado7','Cruz','Morales',8700,'2023-01-07',7),
-('Empleado8','Ortiz','Vargas',8800,'2023-01-08',8),
-('Empleado9','Castro','Rios',8900,'2023-01-09',9),
-('Empleado10','Mendoza','Ruiz',9000,'2023-01-10',10),
-('Empleado11','Alvarez','Reyes',9100,'2023-01-11',11),
-('Empleado12','Jimenez','Cortes',9200,'2023-01-12',12),
-('Empleado13','Navarro','Silva',9300,'2023-01-13',13),
-('Empleado14','Delgado','Mora',9400,'2023-01-14',14),
-('Empleado15','Ramos','Ibarra',9500,'2023-01-15',15),
-('Empleado16','Campos','Vega',9600,'2023-01-16',16),
-('Empleado17','Guerrero','Soto',9700,'2023-01-17',17),
-('Empleado18','Salazar','Paz',9800,'2023-01-18',18),
-('Empleado19','Pineda','Luna',9900,'2023-01-19',19),
-('Empleado20','Acosta','Nava',10000,'2023-01-20',20);
+('Ana','Perez','Lopez',8000,'2023-01-01',1),
+('Carlos','Gomez','Martinez',8200,'2023-01-02',2),
+('María','Hernandez','Diaz',8300,'2023-01-03',3),
+('Juan','Lopez','Garcia',8400,'2023-01-04',4),
+('Laura','Sanchez','Torres',8500,'2023-01-05',5),
+('Pedro','Ramirez','Flores',8600,'2023-01-06',6),
+('Sofía','Cruz','Morales',8700,'2023-01-07',7),
+('Diego','Ortiz','Vargas',8800,'2023-01-08',8),
+('Elena','Castro','Rios',8900,'2023-01-09',9),
+('Marco','Mendoza','Ruiz',9000,'2023-01-10',10),
+('Carmen','Alvarez','Reyes',9100,'2023-01-11',11),
+('Roberto','Jimenez','Cortes',9200,'2023-01-12',12),
+('Norbit','Navarro','Silva',9300,'2023-01-13',13),
+('Rasputia','Delgado','Mora',9400,'2023-01-14',14),
+('Manuel','De la Peña','Peñalosa',9500,'2023-01-15',15),
+('Enrique','De la Costa','Costa',9600,'2023-01-16',16),
+('Nohelia','Xshani','Seguiluz',9700,'2023-01-17',17),
+('Sebastian','Salazar','Paz',9800,'2023-01-18',18),
+('El primo de Marco','Mendoza','Luna',9900,'2023-01-19',19),
+('La hermana de Sebastian','Salazar','Paz',10000,'2023-01-20',20);
 
 SELECT * FROM empleados;
 
@@ -230,3 +230,39 @@ INSERT INTO detalle_ventas (venta_id, producto_id, cantidad, precio_unitario, su
 (20,20,1,1600,1600);
 
 SELECT * FROM detalle_ventas;
+
+
+-- 														CONSULTAS
+
+-- 1. VENTAS POR EMPLEADO || Se unen las tabas de empleados y ventas con un JOIN, se suman los totales de ventas por
+-- cada empleado y se agrupan por el id de empleado
+select e.id_empleado, e.nombre, e.apellido_p, sum(v.total) as total_empleado
+from empleados e join ventas v on e.id_empleado = v.empleado_id group by e.id_empleado;
+
+-- 2. PRODUCTOS MAS VENDIDOS || Se unen las tablas productos y detalle_ventas con un JOIN, se suman las cantidades
+-- vendidas por cada producto y se agrupan por el id del producto
+select p.id_producto, p.nombre, sum(dv.cantidad) as total_vendido
+from productos p join detalle_ventas dv on p.id_producto = dv.producto_id group by p.id_producto;
+
+-- 3. CLIENTES CON COMPRAS SUPERIORES AL PROMEDIO || Se calcula el total de compras de cada cliente, luego de obtiene
+-- el promedio de todas las ventas en general, despues se compara el total de compras de cada cliente con el promedio
+-- de ventas en general, finalmente solo muestra a los clientes que su total de compras sea mayor al promedio
+select c.id_cliente, c.nombre, sum(v.total) as compras_hechas
+from clientes c join ventas v on c.id_cliente = v.cliente_id group by c.id_cliente
+having compras_hechas > (select avg(total) from ventas);
+
+-- 4. SUCURSALES CON MAYORES INGRESOS || Se unen las tablas sucursales y ventas con un JOIN, se calcula el total de
+-- ventas de cada sucursal y luego se ordenan de la sucursales con los ingresos de mayor a menor
+select s.id_sucursal, s.nombre, sum(v.total) as ingresos
+from sucursales s join ventas v on s.id_sucursal = v.sucursal_id group by s.id_sucursal order by ingresos desc;
+
+-- 5. VENTAS CON TOTAL || Se usa la funcion calcular_total_venta para obtener el total de ventas usando la tabla 
+-- detalle_venta, luego muestra el total gurdado y el total calculado
+select id_venta, calcular_total_venta(id_venta) as total_calculado from ventas;
+
+-- 6. CLIENTES CON CLASIFICACION || Se manda a llamar la funcion clasificar_cliente, que determina en base a cuanto ha
+-- gastado cada cliente en compras para clasificarlo como: NUEVO, CASUAL o FRECUENTE
+select id_cliente, nombre, clasificar_cliente(id_cliente) as tipo_cliente from clientes;
+
+-- 7. TOTAL VENTAS POR EMPLEADO || Se agrupan las ventas por empleado y se suman los totales de cada venta
+select empleado_id, sum(total) as total_ventas from ventas group by empleado_id;
