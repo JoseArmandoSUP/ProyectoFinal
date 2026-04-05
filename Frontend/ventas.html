@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar Venta</title>
+</head>
+<body>
+    
+    <h2>Registrar Venta</h2>
+
+    <input id="cliente_id" placeholder="Cliente ID">
+    <input id="empleado_id" placeholder="Empleado ID">
+    <input id="sucursal_id" placeholder="Sucursal ID">
+
+    <h3>Producto</h3>
+
+    <input id="producto_id" placeholder="Producto ID">
+    <input id="cantidad" placeholder="Cantidad">
+    <input id="precio" placeholder="Precio">
+
+    <button onclick="agregarProducto()">Agregar Producto</button>
+    <button onclick="registrarVenta()">Registrar Venta</button>
+
+    <ul id="lista"></ul>
+
+    <script>
+        let productos = [];
+
+        function agregarProducto() {
+            let producto = {
+                producto_id: document.getElementById('producto_id').value,
+                cantidad: document.getElementById('cantidad').value,
+                precio: document.getElementById('precio').value
+            };
+
+            productos.push(producto);
+
+            let lista = document.getElementById('lista');
+            lista.innerHTML += `<li>Producto ${producto.producto_id} - Cantidad ${producto.cantidad}</li>`;
+        }
+
+        function registrarVenta() {
+            fetch('http://localhost:4000/api/venta', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    cliente_id: document.getElementById('cliente_id').value,
+                    empleado_id: document.getElementById('empleado_id').value,
+                    sucursal_id: document.getElementById('sucursal_id').value,
+                    productos: productos
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.msg || "Venta Registrada");
+                productos = [];
+                document.getElementById('lista').innerHTML = '';
+            })
+            .catch(error => console.error("Error", error));
+        }
+    </script>
+
+</body>
+</html>

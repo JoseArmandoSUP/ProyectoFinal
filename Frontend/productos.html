@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productos</title>
+</head>
+<body>
+    
+    <h1>Agregar Productos</h1>
+
+    <input id="nombre" placeholder="Nombre del Producto">
+    <input id="descripcion" placeholder="Descripcion">
+    <input id="precio" placeholder="Precio ($00.00)">
+    <input id="stock" placeholder="Cantidad Disponible">
+    <input id="stock_minimo" placeholder="Cantidad Disponible Minima">
+
+    <button onclick="agregarProductos()">Guardar</button>
+    <ul id="lista"></ul>
+
+    <script>
+        function agregarProductos() {
+            fetch('http://localhost:4000/api/productos', {
+                method: 'POST',
+                headers: {'Content-Type' : 'application/json'},
+                body: JSON.stringify({
+                    nombre: document.getElementById('nombre').value,
+                    descripcion: document.getElementById('descripcion').value,
+                    precio: document.getElementById('precio').value,
+                    stock: document.getElementById('stock').value,
+                    stock_minimo: document.getElementById('stock_minimo').value
+                })
+            })
+            .then(res => res.json()) // .json() para que lea la respuesta correctamente en ese formato
+            .then(data => {alert(data.msg || "Producto Agregado"); obtenerProductos();})
+            .catch(error => console.error('Error:', error));
+        }
+
+        function obtenerProductos() {
+            fetch('http://localhost:4000/api/productos')
+            .then(res => res.json())
+            .then(data => {
+                let lista = document.getElementById('lista');
+                lista.innerHTML = ''; // Limpia la lista antes de llenarla
+                
+                // Verifica que la peticion tenga exito y exista el arreglo "datos"
+                if (data.exito && data.datos) {
+                    data.datos.forEach(producto => {
+                        // Ahora sí, agregamos el HTML a la variable "lista"
+                        lista.innerHTML += `<li> ${producto.nombre} - $${producto.precio} || Cantidad Disponible: ${producto.stock} </li>`;
+                    });
+                } else {
+                    lista.innerHTML = '<li>No hay registros.</li>';
+                }
+            })
+            .catch(error => console.error('Error:', error)); // Siempre es bueno atrapar errores en consola
+        }
+
+        // Llamamos a la función al cargar la página
+        obtenerProductos();
+    </script>
+
+</body>
+</html>

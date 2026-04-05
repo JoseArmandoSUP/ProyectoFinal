@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clientes</title>
+</head>
+<body>
+    
+    <h1>Agregar Cliente</h1>
+
+    <input id="nombre" placeholder="Nombre(s)">
+    <input id="apellido_p" placeholder="Apellido Paterno">
+    <input id="apellido_m" placeholder="Apellido Materno">
+    <input id="telefono" placeholder="Telefono">
+    <input id="email" placeholder="Correo Electronico">
+    <input id="calle" placeholder="Calle">
+    <input id="cp" placeholder="Codigo Postal (cp)">
+    <input id="tipo_cliente" placeholder="Tipo de cliente (NUEVO, CASUAL o FRECUENTE)">
+    <input id="fecha_registro" placeholder="Fecha de Registro">
+
+    <button onclick="agregarCliente()">Guardar</button>
+    <ul id="lista"></ul>
+
+    <script>
+
+        function agregarCliente() {
+            fetch('http://localhost:4000/api/clientes', {
+                method: 'POST',
+                headers: {'Content-Type' : 'application/json'},
+                body: JSON.stringify({
+                    nombre: document.getElementById('nombre').value,
+                    apellido_p: document.getElementById('apellido_p').value,
+                    apellido_m: document.getElementById('apellido_m').value,
+                    telefono: document.getElementById('telefono').value,
+                    email: document.getElementById('email').value,
+                    calle: document.getElementById('calle').value,
+                    cp: document.getElementById('cp').value,
+                    tipo_cliente: document.getElementById('tipo_cliente').value,
+                    fecha_registro: document.getElementById('fecha_registro').value
+                })
+            })
+            .then(res => res.json()) // .json() para que lea la respuesta correctamente en ese formato
+            .then(data => {alert(data.msg || "Cliente agregado"); obtenerClientes();})
+            .catch(error => console.error('Error:', error));
+        }
+
+        function obtenerClientes() {
+            fetch('http://localhost:4000/api/clientes').then(res => res.json())
+            .then(data => {
+                let lista = document.getElementById('lista');
+                lista.innerHTML = ''; // Limpia la lista antes de llenarla
+                if(data.exito && data.datos){
+                    data.datos.forEach(cliente => {lista.innerHTML += `<li>${cliente.nombre} ${cliente.apellido_p} ${cliente.apellido_m}</li>`});
+                }else{
+                    lista.innerHTML = '<ul> No hay registros </ul>'
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        obtenerClientes();
+        
+    </script>
+
+</body>
+</html>
