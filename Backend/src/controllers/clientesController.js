@@ -29,7 +29,7 @@ const agregarCliente = async (req, res) => {
         const fecha_registro = req.body.fecha_registro;
         
         const [resultado] = await pool.query(
-            'INSERT INTO clientes clientes (nombre, apellido_p, apellido_m, telefono, email, calle, cp, tipo_cliente, fecha_registro) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [nombre, apellido_p, apellido_m, telefono, email, calle, cp, tipo_cliente, fecha_registro]
+            'INSERT INTO clientes (nombre, apellido_p, apellido_m, telefono, email, calle, cp, tipo_cliente, fecha_registro) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [nombre, apellido_p, apellido_m, telefono, email, calle, cp, tipo_cliente, fecha_registro]
         );
 
         res.status(201).json({
