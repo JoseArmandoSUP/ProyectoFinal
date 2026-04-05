@@ -3,7 +3,7 @@ const cors = require('cors');
 const app = express();
 const clientesRoute = require('./routes/clientesRoute');
 const productosRoute = require('./routes/productosRoute');
-const ventaRoute = require('./controllers/ventaController');
+const ventaRoute = require('./routes/ventaRoute');
 require('dotenv').config();
 
 app.use(express.json());
