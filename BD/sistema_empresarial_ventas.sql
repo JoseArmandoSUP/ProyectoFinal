@@ -234,10 +234,13 @@ SELECT * FROM detalle_ventas;
 
 -- 														CONSULTAS
 
--- 1. VENTAS POR EMPLEADO || Se unen las tabas de empleados y ventas con un JOIN, se suman los totales de ventas por
+-- 1. VENTAS POR EMPLEADO 
+-- Con Consulta|| Se unen las tabas de empleados y ventas con un JOIN, se suman los totales de ventas por
 -- cada empleado y se agrupan por el id de empleado
 select e.id_empleado, e.nombre, e.apellido_p, sum(v.total) as total_empleado
 from empleados e join ventas v on e.id_empleado = v.empleado_id group by e.id_empleado;
+-- Con Vista
+select * from ventas_por_empleado;
 
 -- 2. PRODUCTOS MAS VENDIDOS || Se unen las tablas productos y detalle_ventas con un JOIN, se suman las cantidades
 -- vendidas por cada producto y se agrupan por el id del producto
@@ -262,91 +265,190 @@ select id_venta, calcular_total_venta(id_venta) as total_calculado from ventas;
 
 -- 6. CLIENTES CON CLASIFICACION || Se manda a llamar la funcion clasificar_cliente, que determina en base a cuanto ha
 -- gastado cada cliente en compras para clasificarlo como: NUEVO, CASUAL o FRECUENTE
-select id_cliente, nombre, clasificar_cliente(id_cliente) as tipo_cliente from clientes;
+select id_cliente, nombre, clasificacion_cliente(id_cliente) as tipo_cliente from clientes;
 
 -- 7. TOTAL VENTAS POR EMPLEADO || Se agrupan las ventas por empleado y se suman los totales de cada venta
-select empleado_id, sum(total) as total_ventas from ventas group by empleado_id;
+SELECT id_empleado, nombre, ventasXempleado(id_empleado) FROM empleados; -- consulta de la fucion
+-- ------------------------------------------------------------------------------------------------------------------
 
 
+-- 														VISTAS 
 
+-- 1. VENTAS POR EMPLEADO
 
---vistas 
---Ventas por empleado
+-- VERSION EN LA QUE SE HACE TODO EL PRCOESO EN LA VISTA  -------> [IVAN]
 -- Se crea una vista llamada ventas_por_empleado
 CREATE VIEW ventas_por_empleado AS
-
 -- Seleccionamos los campos que queremos mostrar
 SELECT 
     e.id_empleado,  -- ID del empleado
-
     -- Concatenamos nombre completo del empleado
     CONCAT(e.nombre, ' ', e.apellido_p, ' ', e.apellido_m) AS nombre_empleado,
-
     -- Contamos cuántas ventas ha realizado el empleado
     COUNT(v.id_venta) AS total_ventas,
-
     -- Sumamos el total de dinero generado por sus ventas
     SUM(v.total) AS monto_total
-
 -- Indicamos de qué tabla principal vienen los datos
 FROM empleados e
-
 -- Unimos la tabla ventas con empleados usando el id del empleado
 JOIN ventas v ON e.id_empleado = v.empleado_id
-
 -- Agrupamos por empleado para que los cálculos sean por cada uno
 GROUP BY e.id_empleado, nombre_empleado;
 
 
+-- VERSION EN LA QUE SOLO SE MANDA A LLAMAR LA FUNCION ventasXempleado DE MAS ABAJO -------> [DIEGO HERNANDEZ]
+CREATE VIEW vista_ventas_empleado AS
+SELECT id_empleado, nombre, ventasXempleado(id_empleado) AS total_vendido FROM empleados; -- aqui se crea la vista para la funcion
+SELECT*FROM vista_ventas_empleado; -- consulta para la vista creada
+-- ------------------------------------------------------------------------------------------------------------------
 
---Ventas por sucursal
-
+-- 2. VENTAS POR SUCURSAL
 -- Se crea una vista llamada ventas_por_sucursal
 CREATE VIEW ventas_por_sucursal AS
-
 -- Seleccionamos los datos que queremos mostrar
 SELECT 
     s.id_sucursal,  -- ID de la sucursal
-
     -- Nombre de la sucursal con un alias
     s.nombre AS nombre_sucursal,
-
     -- Contamos cuántas ventas se realizaron en la sucursal
     COUNT(v.id_venta) AS total_ventas,
-
     -- Sumamos el total de dinero generado en la sucursal
     SUM(v.total) AS monto_total
-
 -- Tabla principal: sucursales
 FROM sucursales s
-
 -- Se une con la tabla ventas usando el id de sucursal
 JOIN ventas v ON s.id_sucursal = v.sucursal_id
-
 -- Agrupamos por sucursal para obtener resultados individuales
 GROUP BY s.id_sucursal, s.nombre;
+-- Se manda a llamar
+select * from ventas_por_sucursal;
+-- ------------------------------------------------------------------------------------------------------------------
+
+-- 3. VISTA CLIENTES TIPO
+CREATE VIEW vista_clientes_tipo AS
+SELECT id_cliente, nombre, clasificacion_cliente(id_cliente) AS tipo_cliente FROM clientes; -- vista donde se ocupa la funcion 
+SELECT*FROM vista_clientes_tipo; -- consulta de la vista creada
+-- ------------------------------------------------------------------------------------------------------------------
+
+
+-- 															FUNCIONES
+
+-- 1. TOTAL DE VENTAS POR EMPLEADO
+DELIMITER $$
+DROP FUNCTION IF EXISTS ventasXempleado$$
+CREATE FUNCTION ventasXempleado(p_id_empleado INT) 
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    DECLARE total_ventas DECIMAL(10,2);
+
+    SELECT IFNULL(SUM(total), 0)
+    INTO total_ventas
+    FROM ventas
+    WHERE empleado_id = p_id_empleado;
+
+    RETURN total_ventas;
+END$$
+DELIMITER ;
+
+SELECT*FROM empleados;
+-- ------------------------------------------------------------------------------------------------------------------
+
+-- 2. CLASIFICACION DE CLIENTE
+delimiter $$
+drop function if exists clasificacion_cliente $$
+create function clasificacion_cliente(p_cliente_id int)
+returns varchar(50)
+deterministic
+	begin
+		declare v_total decimal (12, 2); -- Variable para guardar el total de compras
+        select sum(total) into v_total from ventas where cliente_id = p_cliente_id; -- Obtiene el total gastado por el cliente
+        set v_total = ifnull(v_total, 0); -- Si no ha comprado nada, evita el null
+        return ( -- Clasificacion del tipo de cliente con CASE
+			case 
+				when v_total = 0 then 'Nuevo'
+                when v_total < 5000 then 'Casual'
+                else 'Frecuente'
+			end
+        );
+	end $$
+delimiter ;
+-- ------------------------------------------------------------------------------------------------------------------
 
 
 
-SELECT * FROM clientes_tipo;
+-- 														PROCEDIMIENTOS    [pendiente]
+-- 														*poner aqui*
+-- ------------------------------------------------------------------------------------------------------------------
 
---1. Índice en ventas por empleado
 
---Sirve para consultas como:
---ventas por empleado
---joins con empleados
+-- 															TRIGGER 
+-- Evita venta sin inventario
+DELIMITER $$
+
+DROP TRIGGER IF EXISTS validar_stock$$
+
+CREATE TRIGGER validar_stock
+BEFORE INSERT ON detalle_ventas
+FOR EACH ROW
+BEGIN
+    DECLARE stock_actual INT;
+
+    SELECT stock 
+    INTO stock_actual
+    FROM productos
+    WHERE id_producto = NEW.producto_id;
+
+    IF stock_actual < NEW.cantidad THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Error: Stock insuficiente para realizar la venta';
+    END IF;
+
+END$$
+
+DELIMITER ;
+
+INSERT INTO detalle_ventas (venta_id, producto_id, cantidad, precio_unitario, subtotal)
+VALUES (1, 1, 9999, 100, 999900); -- Registro erroneo para mostrar resultados
+
+INSERT INTO detalle_ventas (venta_id, producto_id, cantidad, precio_unitario, subtotal)
+VALUES (1, 1, 2, 100, 200); -- Registro correcto
+
+SELECT*FROM detalle_ventas;
+-- ------------------------------------------------------------------------------------------------------------------
+
+
+
+-- 													TRANSACCIÓN [pendiente]
+-- 														*poner aqui*
+-- ------------------------------------------------------------------------------------------------------------------
+
+
+-- 													USUARIOS Y ROLES [pendiente]
+--      												*poner aqui*
+-- ------------------------------------------------------------------------------------------------------------------
+
+-- 													INDICES
+
+-- 1. Índice en ventas por empleado
+-- Sirve para consultas como:
+-- ventas por empleado
+-- joins con empleados
 CREATE INDEX idx_ventas_empleado
 ON ventas(empleado_id);
 
---2. Índice en ventas por sucursal
---Sirve para consultas como:
---vistas de ventas por sucursal
---filtros por sucursal
+
+-- 2. Índice en ventas por sucursal
+-- Sirve para consultas como:
+-- vistas de ventas por sucursal
+-- filtros por sucursal
 CREATE INDEX idx_ventas_sucursal
 ON ventas(sucursal_id);
 
---3. Índice en clientes por tipo_cliente
---clasificaciones
---filtros (nuevo, frecuente, etc.)
+
+-- 3. Índice en clientes por tipo_cliente
+-- clasificaciones
+-- filtros (nuevo, frecuente, etc.)
 CREATE INDEX idx_clientes_tipo
 ON clientes(tipo_cliente);
+-- ------------------------------------------------------------------------------------------------------------------
