@@ -266,3 +266,87 @@ select id_cliente, nombre, clasificar_cliente(id_cliente) as tipo_cliente from c
 
 -- 7. TOTAL VENTAS POR EMPLEADO || Se agrupan las ventas por empleado y se suman los totales de cada venta
 select empleado_id, sum(total) as total_ventas from ventas group by empleado_id;
+
+
+
+
+--vistas 
+--Ventas por empleado
+-- Se crea una vista llamada ventas_por_empleado
+CREATE VIEW ventas_por_empleado AS
+
+-- Seleccionamos los campos que queremos mostrar
+SELECT 
+    e.id_empleado,  -- ID del empleado
+
+    -- Concatenamos nombre completo del empleado
+    CONCAT(e.nombre, ' ', e.apellido_p, ' ', e.apellido_m) AS nombre_empleado,
+
+    -- Contamos cuántas ventas ha realizado el empleado
+    COUNT(v.id_venta) AS total_ventas,
+
+    -- Sumamos el total de dinero generado por sus ventas
+    SUM(v.total) AS monto_total
+
+-- Indicamos de qué tabla principal vienen los datos
+FROM empleados e
+
+-- Unimos la tabla ventas con empleados usando el id del empleado
+JOIN ventas v ON e.id_empleado = v.empleado_id
+
+-- Agrupamos por empleado para que los cálculos sean por cada uno
+GROUP BY e.id_empleado, nombre_empleado;
+
+
+
+--Ventas por sucursal
+
+-- Se crea una vista llamada ventas_por_sucursal
+CREATE VIEW ventas_por_sucursal AS
+
+-- Seleccionamos los datos que queremos mostrar
+SELECT 
+    s.id_sucursal,  -- ID de la sucursal
+
+    -- Nombre de la sucursal con un alias
+    s.nombre AS nombre_sucursal,
+
+    -- Contamos cuántas ventas se realizaron en la sucursal
+    COUNT(v.id_venta) AS total_ventas,
+
+    -- Sumamos el total de dinero generado en la sucursal
+    SUM(v.total) AS monto_total
+
+-- Tabla principal: sucursales
+FROM sucursales s
+
+-- Se une con la tabla ventas usando el id de sucursal
+JOIN ventas v ON s.id_sucursal = v.sucursal_id
+
+-- Agrupamos por sucursal para obtener resultados individuales
+GROUP BY s.id_sucursal, s.nombre;
+
+
+
+SELECT * FROM clientes_tipo;
+
+--1. Índice en ventas por empleado
+
+--Sirve para consultas como:
+--ventas por empleado
+--joins con empleados
+CREATE INDEX idx_ventas_empleado
+ON ventas(empleado_id);
+
+--2. Índice en ventas por sucursal
+--Sirve para consultas como:
+--vistas de ventas por sucursal
+--filtros por sucursal
+CREATE INDEX idx_ventas_sucursal
+ON ventas(sucursal_id);
+
+--3. Índice en clientes por tipo_cliente
+--clasificaciones
+--filtros (nuevo, frecuente, etc.)
+CREATE INDEX idx_clientes_tipo
+ON clientes(tipo_cliente);
