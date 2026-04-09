@@ -266,3 +266,86 @@ select id_cliente, nombre, clasificar_cliente(id_cliente) as tipo_cliente from c
 
 -- 7. TOTAL VENTAS POR EMPLEADO || Se agrupan las ventas por empleado y se suman los totales de cada venta
 select empleado_id, sum(total) as total_ventas from ventas group by empleado_id;
+
+
+-- Funcion de total de ventas por empleado 
+select empleado_id, sum(total) as total_ventas from ventas group by empleado_id;
+ 
+DELIMITER $$
+DROP FUNCTION IF EXISTS ventasXempleado$$
+CREATE FUNCTION ventasXempleado(p_id_empleado INT) 
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    DECLARE total_ventas DECIMAL(10,2);
+
+    SELECT IFNULL(SUM(total), 0)
+    INTO total_ventas
+    FROM ventas
+    WHERE empleado_id = p_id_empleado;
+
+    RETURN total_ventas;
+END$$
+DELIMITER ;
+
+SELECT id_empleado, nombre, ventasXempleado(id_empleado) FROM empleados; -- consulta de la fucion
+SELECT*FROM empleados;
+
+CREATE VIEW vista_ventas_empleado AS
+SELECT id_empleado, nombre, ventasXempleado(id_empleado) AS total_vendido FROM empleados; -- aqui se crea la vista para la funcion
+SELECT*FROM vista_ventas_empleado; -- consulta para la vista creada
+
+
+-- 8. Funcion para clasificar clientes
+DELIMITER $$
+DROP FUNCTION IF EXISTS clasificacion_cliente$$
+CREATE FUNCTION clasificacion_cliente(p_id_cliente INT) 
+RETURNS VARCHAR(30)
+DETERMINISTIC
+BEGIN
+    DECLARE total_compras DECIMAL(10,2);
+    SELECT IFNULL(SUM(total), 0)
+    INTO total_compras
+    FROM ventas
+    WHERE cliente_id = p_id_cliente;
+
+    RETURN (
+        CASE
+            WHEN total_compras >= 10000 THEN 'Cliente Premium'
+            WHEN total_compras >= 5000 THEN 'Cliente Frecuente'
+            ELSE 'Cliente Regular'
+        END
+    );
+END$$
+DELIMITER ;
+
+CREATE VIEW vista_clientes_tipo AS
+SELECT id_cliente, nombre, clasificacion_cliente(id_cliente) AS tipo_cliente FROM clientes; -- vista donde se ocupa la funcion 
+SELECT*FROM vista_clientes_tipo; -- consulta de la vista creada
+
+-- 9. Trigger para evitar venta sin inventario
+DELIMITER $$
+DROP TRIGGER IF EXISTS validar_stock$$
+CREATE TRIGGER validar_stock
+BEFORE INSERT ON detalle_ventas
+FOR EACH ROW
+BEGIN
+    DECLARE stock_actual INT;
+
+    SELECT stock 
+    INTO stock_actual
+    FROM productos
+    WHERE id_producto = NEW.producto_id;
+
+    IF stock_actual < NEW.cantidad THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Error: Stock insuficiente para realizar la venta';
+    END IF;
+END$$
+DELIMITER ;
+
+INSERT INTO detalle_ventas (venta_id, producto_id, cantidad, precio_unitario, subtotal)
+VALUES (1, 1, 9999, 100, 999900); -- Registro erroneo para mostrar resultados
+
+INSERT INTO detalle_ventas (venta_id, producto_id, cantidad, precio_unitario, subtotal)
+VALUES (1, 1, 2, 100, 200); -- Registro correcto
