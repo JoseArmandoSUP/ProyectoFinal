@@ -1,5 +1,8 @@
 CREATE DATABASE sistema_empresarial_ventas;
 USE sistema_empresarial_ventas;
+-- Lineas en donde empieza cada cosa:
+-- 235 Consultas || 275 Vistas || 334 Funciones || 380 Procedimientos || 386 Trigger || 422 Transaccion 
+-- || 427 Usuarios y Roles || 431 Indices
 
 CREATE TABLE clientes (
     id_cliente INT PRIMARY KEY AUTO_INCREMENT,
