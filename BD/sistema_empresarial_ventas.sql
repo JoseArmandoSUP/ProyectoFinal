@@ -265,21 +265,4 @@ select id_venta, calcular_total_venta(id_venta) as total_calculado from ventas;
 select id_cliente, nombre, clasificar_cliente(id_cliente) as tipo_cliente from clientes;
 
 -- 7. TOTAL VENTAS POR EMPLEADO || Se agrupan las ventas por empleado y se suman los totales de cada venta
-select id_empleado, total_ventas_empleado(id_empleado) from empleados;
-
-
--- 														FUNCIONES
-
--- 1. Calcular el total de todas las ventas (SE USA EN LA CONSULTA 5)
-delimiter $$
--- Elimina la funcion si ya existe
-drop function if exists calcular_total_venta $$
-create function calcular_total_venta(p_venta_id INT)
-returns decimal(10, 2)
-deterministic
-	begin
-		declare total decimal(10, 2); -- variable para guradar el total
-        select sum(subtotal) into total from detalle_ventas where venta_id = p_venta_id; -- se suman los subtotales de detalle_venta
-        return ifnull(total, 0); -- IFNULL es para que evite devolver un NULL si no har registros
-	end $$
-delimiter ;        
+select empleado_id, sum(total) as total_ventas from ventas group by empleado_id;
