@@ -380,8 +380,61 @@ delimiter ;
 
 
 
--- 														PROCEDIMIENTOS    [pendiente]
--- 														*poner aqui*
+-- 														PROCEDIMIENTOS    
+
+-- 1. REGISTRAR VENTA || Automatiza el insertar una venta, detalle_venta, ajusta el stock y calcula el total
+delimiter $$
+drop procedure if exists registrar_venta $$
+create procedure registrar_venta(
+	in p_cliente_id int,
+    in p_empleado_id int,
+    in p_sucursal_id int,
+    in p_producto_id int,
+    in p_cantidad int
+)
+	begin
+		declare registro_precio decimal(10, 2);
+        declare registro_total decimal(10, 2);
+        declare registro_venta_id int;
+        -- Obtiene el precio del producto
+        select precio into registro_precio from productos where id_producto = p_producto_id; 
+        -- Calcula el total, multiplica el precio por la cantidad
+        set registro_total = registro_precio * p_cantidad; 
+        -- Insertar la venta con el total iniciado en 0
+        insert into ventas (total, cliente_id, empleado_id, sucursal_id) 
+        values (0, p_cliente_id, p_empleado_id, p_sucursal_id);
+        -- Obtener el ID generado
+        set registro_venta_id = LAST_INSERT_ID(); -- Last_Insert_id() devuelve el valor del id de la venta que se generó automaticamente por la ultima sentencia INSERT hecha en ventas
+        -- Insertar el detalle de la venta
+        insert into detalle_ventas (venta_id, producto_id, cantidad, precio_unitario, subtotal) 
+        values (registro_venta_id, p_producto_id, p_cantidad, registro_precio, registro_total);
+        -- Se acualiza la cantidad disponible del producto restando el stock original por la cantidad comprada
+        update productos set stock = stock - p_cantidad where id_producto = p_producto_id;
+        -- Actualizar el total de la venta usando la variable declarada
+        update ventas set total = registro_total where id_venta = registro_venta_id;
+	end $$
+delimiter ;
+
+-- Llamar al procedimeinto
+CALL registrar_venta(1, 1, 1, 1, 2);
+select * from ventas; -- Venta no. 21
+select * from detalle_ventas; -- Detalle de venta no. 23
+select * from productos; -- Ahora quedan 8 laptops, antes habia 9
+-- -------------------------------------------------------------------------------------------------------------------
+
+-- 2. HISTORIAL DE CLIENTE || Muestra todas las ventas de un cliente
+delimiter $$
+drop procedure if exists historial_cliente $$
+create procedure historial_cliente(in p_cliente_id int)
+	begin
+		select c.nombre as cliente, v.id_venta, v.fecha, v.total from clientes c -- Seleccionar los datos a aparecer en el historial
+        join ventas v on c.id_cliente = v.cliente_id -- se unen los datos de las tablas con un JOIN
+        where c.id_cliente = p_cliente_id; -- Filtra por cada cliente
+	end $$
+delimiter ;
+
+-- Llamar al procedimiento
+CALL historial_cliente(1);
 -- ------------------------------------------------------------------------------------------------------------------
 
 
@@ -419,7 +472,6 @@ VALUES (1, 1, 2, 100, 200); -- Registro correcto
 
 SELECT*FROM detalle_ventas;
 -- ------------------------------------------------------------------------------------------------------------------
-
 
 
 -- 													TRANSACCIÓN [pendiente]
