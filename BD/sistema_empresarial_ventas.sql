@@ -474,13 +474,133 @@ SELECT*FROM detalle_ventas;
 -- ------------------------------------------------------------------------------------------------------------------
 
 
--- 													TRANSACCIÓN [pendiente]
--- 														*poner aqui*
+-- 													TRANSACCIÓN 
+
+-- 1. REGISTRO COMPLETO DE VENTA || Justificación: Esta transacción asegura que si al insertar el detalle 
+-- de venta o actualizar el stock hay un error NO se guarde la venta a medias . 
+delimiter $$
+drop procedure if exists registrar_venta_transaccion $$
+create procedure registrar_venta_transaccion(
+    in p_cliente_id int,
+    in p_empleado_id int,
+    in p_sucursal_id int,
+    in p_producto_id int,
+    in p_cantidad int
+)
+	begin
+		declare v_precio decimal(10, 2);
+		declare v_total decimal(10, 2);
+		declare v_venta_id int;
+
+		-- Manejador de errores: Si pasa cualquier error (como falta de stock activando el trigger), deshace todo.
+		declare exit handler for sqlexception
+		begin
+			rollback;
+			select 'Error en la transaccion. Se realizo un ROLLBACK, descartando cambios.' as resultado;
+		end;
+
+		-- Inicia el bloque de transaccion
+		start transaction;
+
+		-- Obtener el precio del producto
+		select precio into v_precio from productos where id_producto = p_producto_id;
+		set v_total = v_precio * p_cantidad;
+
+		-- Insertar la nueva venta
+		insert into ventas (total, cliente_id, empleado_id, sucursal_id) 
+		values (v_total, p_cliente_id, p_empleado_id, p_sucursal_id);
+		
+		-- Obtener el ID que se inserto
+		set v_venta_id = LAST_INSERT_ID();
+
+		-- Insertar el detalle de la venta
+		insert into detalle_ventas (venta_id, producto_id, cantidad, precio_unitario, subtotal) 
+		values (v_venta_id, p_producto_id, p_cantidad, v_precio, v_total);
+
+		-- Actualizar el stock del producto
+		update productos set stock = stock - p_cantidad where id_producto = p_producto_id;
+
+		-- Si todo salio bien, confirma los cambios (guardado definitivo)
+		commit;
+		select 'Transaccion completada con exito. Venta y stock actualizados.' as resultado;
+
+	end $$
+delimiter ;
+
+-- Llamar al procedimiento con transaccion
+CALL registrar_venta_transaccion(2, 2, 2, 2, 1);
+select * from ventas; -- Nueva venta reflejada si la transaccion tiene exito
 -- ------------------------------------------------------------------------------------------------------------------
 
 
--- 													USUARIOS Y ROLES [pendiente]
---      												*poner aqui*
+-- 													USUARIOS Y ROLES
+
+-- Limpieza de roles por si ya existian previamente
+drop role if exists 'admin', 'vendedor', 'analista';
+drop user if exists 'usu_admin'@'localhost', 'usu_vendedor'@'localhost', 'usu_analista'@'localhost';
+
+-- 1. CREACION DE ROLES || Justificacion: Facilitan la administracion por grupos en lugar de asignar 
+-- permisos a usuarios individuales.
+create role 'admin';
+create role 'vendedor';
+create role 'analista';
+
+-- 2. ASIGNACION DE PRIVILEGIOS A ROLES
+
+-- Rol Admin (Administrador global) || Tiene todos los privilegios sobre todas las tablas, vistas y 
+-- procedimientos de la BD. Resuelve mantener el control de la base para el analista y vendedores.
+grant all privileges on sistema_empresarial_ventas.* to 'admin';
+
+-- Rol Vendedor (Operaciones para vendedores) || Solo pueden ver (select) clientes y productos.
+-- Solo pueden ingresar nuevas ventas y detalles (insert). Evita alteraciones en otras tablas.
+grant select on sistema_empresarial_ventas.clientes to 'vendedor';
+grant select on sistema_empresarial_ventas.productos to 'vendedor';
+grant insert on sistema_empresarial_ventas.ventas to 'vendedor';
+grant insert on sistema_empresarial_ventas.detalle_ventas to 'vendedor';
+
+-- Rol Analista (Solo lectura a traves de vistas) || Se limitan los permisos a SELECT en las vistas.
+-- Evita el acceso directo a los datos crudos y su manipulacion.
+grant select on sistema_empresarial_ventas.ventas_por_empleado to 'analista';
+grant select on sistema_empresarial_ventas.vista_ventas_empleado to 'analista';
+grant select on sistema_empresarial_ventas.ventas_por_sucursal to 'analista';
+grant select on sistema_empresarial_ventas.vista_clientes_tipo to 'analista';
+
+-- 3. CREACION DE USUARIOS Y ASIGNACION
+create user 'usu_admin'@'localhost' identified by 'admin123';
+create user 'usu_vendedor'@'localhost' identified by 'vende123';
+create user 'usu_analista'@'localhost' identified by 'analis123';
+
+-- Asignar los roles a sus respectivos usuarios
+grant 'admin' to 'usu_admin'@'localhost';
+grant 'vendedor' to 'usu_vendedor'@'localhost';
+grant 'analista' to 'usu_analista'@'localhost';
+
+-- Activacion automatica del rol al iniciar sesion 
+set default role 'admin' to 'usu_admin'@'localhost';
+set default role 'vendedor' to 'usu_vendedor'@'localhost';
+set default role 'analista' to 'usu_analista'@'localhost';
+flush privileges;
+
+-- 4. PRUEBAS DE ACCESO PERMITIDO Y DENEGADO (Para probar con los usuarios conectados)
+
+-- --- PRUEBAS DEL VENDEDOR (usu_vendedor) ---
+-- PERMITIDO: Registrar venta y revisar productos/clientes
+-- select * from productos;
+-- insert into ventas (total, cliente_id, empleado_id, sucursal_id) values (0, 1, 1, 1);
+-- DENEGADO: Actualizar un cliente o borrar productos
+-- update clientes set nombre = 'Nuevo' where id_cliente = 1; -- (Error: UPDATE command denied)
+-- select * from empleados; -- (Error: SELECT command denied)
+
+-- --- PRUEBAS DEL ANALISTA (usu_analista) ---
+-- PERMITIDO: Consultar vistas
+-- select * from ventas_por_sucursal;
+-- select * from vista_clientes_tipo;
+-- DENEGADO: Consultar tablas directas o hacer INSERT
+-- select * from ventas; -- (Error: SELECT command denied)
+-- insert into sucursales (nombre, ciudad, direccion, telefono) values ('N','Qro','Av','123'); -- (Error: INSERT command denied)
+
+-- --- PRUEBAS DEL ADMIN (usu_admin) ---
+-- PERMITIDO: Control total, puede hacer update, delete, create o drop sin restriccion alguna.
 -- ------------------------------------------------------------------------------------------------------------------
 
 -- 													INDICES
