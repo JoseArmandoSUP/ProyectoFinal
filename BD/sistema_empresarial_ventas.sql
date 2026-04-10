@@ -1,8 +1,8 @@
 CREATE DATABASE sistema_empresarial_ventas;
 USE sistema_empresarial_ventas;
 -- Lineas en donde empieza cada cosa:
--- 235 Consultas || 275 Vistas || 334 Funciones || 380 Procedimientos || 386 Trigger || 422 Transaccion 
--- || 427 Usuarios y Roles || 431 Indices
+-- 243 Consultas || 283 Vistas || 342 Funciones || 388 Procedimientos || 446 Trigger || 482 Transaccion 
+-- 541 Usuarios y Roles || 615 Indices
 
 CREATE TABLE clientes (
     id_cliente INT PRIMARY KEY AUTO_INCREMENT,
@@ -551,6 +551,10 @@ create role 'analista';
 -- procedimientos de la BD. Resuelve mantener el control de la base para el analista y vendedores.
 grant all privileges on sistema_empresarial_ventas.* to 'admin';
 
+-- Si da un error como 1034 (HY000): Index for table 'db' is corrupt; try to repair it, ejecutar este comando:
+REPAIR TABLE mysql.db;
+
+
 -- Rol Vendedor (Operaciones para vendedores) || Solo pueden ver (select) clientes y productos.
 -- Solo pueden ingresar nuevas ventas y detalles (insert). Evita alteraciones en otras tablas.
 grant select on sistema_empresarial_ventas.clientes to 'vendedor';
@@ -575,10 +579,16 @@ grant 'admin' to 'usu_admin'@'localhost';
 grant 'vendedor' to 'usu_vendedor'@'localhost';
 grant 'analista' to 'usu_analista'@'localhost';
 
--- Activacion automatica del rol al iniciar sesion 
+-- Activacion automatica del rol al iniciar sesion (Solo para MySQL 8+)
 set default role 'admin' to 'usu_admin'@'localhost';
 set default role 'vendedor' to 'usu_vendedor'@'localhost';
 set default role 'analista' to 'usu_analista'@'localhost';
+
+-- Activacion automatica del rol al iniciar sesion (para MariaDB) 
+SET DEFAULT ROLE 'vendedor' FOR 'usu_vendedor'@'localhost';
+SET DEFAULT ROLE 'admin' FOR 'usu_admin'@'localhost';
+SET DEFAULT ROLE 'analista' FOR 'usu_analista'@'localhost';
+
 flush privileges;
 
 -- 4. PRUEBAS DE ACCESO PERMITIDO Y DENEGADO (Para probar con los usuarios conectados)
