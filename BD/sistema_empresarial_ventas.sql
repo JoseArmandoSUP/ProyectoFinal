@@ -1,8 +1,8 @@
 CREATE DATABASE sistema_empresarial_ventas;
 USE sistema_empresarial_ventas;
 -- Lineas en donde empieza cada cosa:
--- 243 Consultas || 283 Vistas || 342 Funciones || 388 Procedimientos || 446 Trigger || 482 Transaccion 
--- 541 Usuarios y Roles || 615 Indices
+-- 238 Consultas || 278 Vistas || 337 Funciones || 383 Procedimientos || 441 Trigger || 477 Transaccion 
+-- 536 Usuarios y Roles || 616 Indices
 
 CREATE TABLE clientes (
     id_cliente INT PRIMARY KEY AUTO_INCREMENT,
@@ -621,7 +621,7 @@ flush privileges;
 -- joins con empleados
 CREATE INDEX idx_ventas_empleado
 ON ventas(empleado_id);
-
+show index from ventas;
 
 -- 2. Índice en ventas por sucursal
 -- Sirve para consultas como:
@@ -630,10 +630,10 @@ ON ventas(empleado_id);
 CREATE INDEX idx_ventas_sucursal
 ON ventas(sucursal_id);
 
-
 -- 3. Índice en clientes por tipo_cliente
 -- clasificaciones
 -- filtros (nuevo, frecuente, etc.)
 CREATE INDEX idx_clientes_tipo
 ON clientes(tipo_cliente);
+show index from clientes;
 -- ------------------------------------------------------------------------------------------------------------------
