@@ -1,67 +1,171 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clientes</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clientes</title>
 </head>
 <body>
-    
-    <h1>Agregar Cliente</h1>
 
-    <input id="nombre" placeholder="Nombre(s)">
-    <input id="apellido_p" placeholder="Apellido Paterno">
-    <input id="apellido_m" placeholder="Apellido Materno">
-    <input id="telefono" placeholder="Telefono">
-    <input id="email" placeholder="Correo Electronico">
-    <input id="calle" placeholder="Calle">
-    <input id="cp" placeholder="Codigo Postal (cp)">
-    <input id="tipo_cliente" placeholder="Tipo de cliente (NUEVO, CASUAL o FRECUENTE)">
-    <input id="fecha_registro" placeholder="Fecha de Registro">
+  <h1>Agregar Cliente</h1>
 
-    <button onclick="agregarCliente()">Guardar</button>
-    <ul id="lista"></ul>
+  <input id="nombre" placeholder="Nombre(s)">
+  <input id="apellido_p" placeholder="Apellido Paterno">
+  <input id="apellido_m" placeholder="Apellido Materno">
+  <input id="telefono" placeholder="Teléfono">
+  <input id="email" placeholder="Correo Electrónico">
+  <input id="calle" placeholder="Calle">
+  <input id="cp" placeholder="Código Postal (cp)">
 
-    <script>
+  <!-- Mejor usar select para evitar valores inválidos -->
+  <select id="tipo_cliente">
+    <option value="">Selecciona tipo_cliente</option>
+    <option value="nuevo">nuevo</option>
+    <option value="casual">casual</option>
+    <option value="frecuente">frecuente</option>
+  </select>
 
-        function agregarCliente() {
-            fetch('http://localhost:4000/api/clientes', {
-                method: 'POST',
-                headers: {'Content-Type' : 'application/json'},
-                body: JSON.stringify({
-                    nombre: document.getElementById('nombre').value,
-                    apellido_p: document.getElementById('apellido_p').value,
-                    apellido_m: document.getElementById('apellido_m').value,
-                    telefono: document.getElementById('telefono').value,
-                    email: document.getElementById('email').value,
-                    calle: document.getElementById('calle').value,
-                    cp: document.getElementById('cp').value,
-                    tipo_cliente: document.getElementById('tipo_cliente').value,
-                    fecha_registro: document.getElementById('fecha_registro').value
-                })
-            })
-            .then(res => res.json()) // .json() para que lea la respuesta correctamente en ese formato
-            .then(data => {alert(data.msg || "Cliente agregado"); obtenerClientes();})
-            .catch(error => console.error('Error:', error));
-        }
+  <!-- type="date" ya manda YYYY-MM-DD -->
+  <input id="fecha_registro" type="date" placeholder="Fecha de Registro">
 
-        function obtenerClientes() {
-            fetch('http://localhost:4000/api/clientes').then(res => res.json())
-            .then(data => {
-                let lista = document.getElementById('lista');
-                lista.innerHTML = ''; // Limpia la lista antes de llenarla
-                if(data.exito && data.datos){
-                    data.datos.forEach(cliente => {lista.innerHTML += `<li>${cliente.nombre} ${cliente.apellido_p} ${cliente.apellido_m}</li>`});
-                }else{
-                    lista.innerHTML = '<ul> No hay registros </ul>'
-                }
-            })
-            .catch(error => console.error('Error:', error));
-        }
+  <button onclick="agregarCliente()">Guardar</button>
 
+  <hr>
+
+  <h2>Listado de clientes (GET /api/clientes)</h2>
+  <ul id="lista"></ul>
+
+  <hr>
+
+  <h2>Clientes con clasificación (GET /api/clientes/clasificacion)</h2>
+  <button onclick="obtenerClientesClasificacion()">Ver clasificación</button>
+  <ul id="listaClasificacion"></ul>
+
+  <hr>
+
+  <h2>Clientes con compras superiores al promedio (GET /api/clientes/compras/superiores-promedio)</h2>
+  <button onclick="obtenerClientesSuperiorPromedio()">Ver</button>
+  <ul id="listaSuperiorPromedio"></ul>
+
+  <hr>
+
+  <h2>Historial por cliente (GET /api/clientes/:id_cliente/historial)</h2>
+  <input id="historial_id_cliente" type="number" min="1" placeholder="id_cliente (ej. 1)">
+  <button onclick="obtenerHistorial()">Ver historial</button>
+  <ul id="listaHistorial"></ul>
+
+  <script>
+    const API = 'http://localhost:4000/api/clientes';
+
+    function agregarCliente() {
+      // Validación rápida en front (opcional)
+      const payload = {
+        nombre: document.getElementById('nombre').value,
+        apellido_p: document.getElementById('apellido_p').value,
+        apellido_m: document.getElementById('apellido_m').value,
+        telefono: document.getElementById('telefono').value,
+        email: document.getElementById('email').value,
+        calle: document.getElementById('calle').value,
+        cp: document.getElementById('cp').value,
+        tipo_cliente: document.getElementById('tipo_cliente').value, // ya va en minúsculas
+        fecha_registro: document.getElementById('fecha_registro').value // YYYY-MM-DD
+      };
+
+      fetch(API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.msg || 'Error al agregar cliente');
+        return data;
+      })
+      .then(data => {
+        alert(data.msg || 'Cliente agregado');
         obtenerClientes();
-        
-    </script>
+      })
+      .catch(error => alert(error.message));
+    }
+
+    function obtenerClientes() {
+      fetch(API)
+        .then(res => res.json())
+        .then(data => {
+          const lista = document.getElementById('lista');
+          lista.innerHTML = '';
+          if (data.exito && data.datos) {
+            data.datos.forEach(c => {
+              lista.innerHTML += `<li>[${c.id_cliente}] ${c.nombre} ${c.apellido_p} ${c.apellido_m} - ${c.email}</li>`;
+            });
+          } else {
+            lista.innerHTML = '<li>No hay registros</li>';
+          }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function obtenerClientesClasificacion() {
+      fetch(`${API}/clasificacion`)
+        .then(res => res.json())
+        .then(data => {
+          const lista = document.getElementById('listaClasificacion');
+          lista.innerHTML = '';
+          if (data.exito && data.datos) {
+            data.datos.forEach(c => {
+              lista.innerHTML += `<li>[${c.id_cliente}] ${c.nombre} → ${c.tipo_cliente}</li>`;
+            });
+          } else {
+            lista.innerHTML = '<li>No hay datos</li>';
+          }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function obtenerClientesSuperiorPromedio() {
+      fetch(`${API}/compras/superiores-promedio`)
+        .then(res => res.json())
+        .then(data => {
+          const lista = document.getElementById('listaSuperiorPromedio');
+          lista.innerHTML = '';
+          if (data.exito && data.datos) {
+            data.datos.forEach(c => {
+              lista.innerHTML += `<li>[${c.id_cliente}] ${c.nombre} → compras: $${Number(c.compras_hechas).toFixed(2)}</li>`;
+            });
+          } else {
+            lista.innerHTML = '<li>No hay datos</li>';
+          }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function obtenerHistorial() {
+      const id = document.getElementById('historial_id_cliente').value;
+      if (!id) return alert('Ingresa un id_cliente');
+
+      fetch(`${API}/${id}/historial`)
+        .then(res => res.json())
+        .then(data => {
+          const lista = document.getElementById('listaHistorial');
+          lista.innerHTML = '';
+          if (data.exito && data.datos) {
+            if (data.datos.length === 0) {
+              lista.innerHTML = '<li>Sin ventas para este cliente</li>';
+              return;
+            }
+            data.datos.forEach(v => {
+              lista.innerHTML += `<li>Venta #${v.id_venta} | Fecha: ${v.fecha} | Total: $${Number(v.total).toFixed(2)}</li>`;
+            });
+          } else {
+            lista.innerHTML = '<li>No hay datos</li>';
+          }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    // Carga inicial
+    obtenerClientes();
+  </script>
 
 </body>
 </html>

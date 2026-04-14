@@ -2,6 +2,11 @@ const express = require('express');
 const router = express.Router();
 const productosController = require('../controllers/productosController');
 
+
+router.get('/stock-bajo', productosController.obtenerProductosStockBajo);
+router.get('/mas-vendidos', productosController.obtenerProductosMasVendidos);
+
+
 router.get('/', productosController.obtenerProductos);
 router.post('/', productosController.agregarProductos);
 router.put('/:id_producto', productosController.editarProducto);

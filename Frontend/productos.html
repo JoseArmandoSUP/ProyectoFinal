@@ -1,64 +1,136 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Productos</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Productos</title>
 </head>
 <body>
-    
-    <h1>Agregar Productos</h1>
 
-    <input id="nombre" placeholder="Nombre del Producto">
-    <input id="descripcion" placeholder="Descripcion">
-    <input id="precio" placeholder="Precio ($00.00)">
-    <input id="stock" placeholder="Cantidad Disponible">
-    <input id="stock_minimo" placeholder="Cantidad Disponible Minima">
+  <h1>Agregar Productos</h1>
 
-    <button onclick="agregarProductos()">Guardar</button>
-    <ul id="lista"></ul>
+  <input id="nombre" placeholder="Nombre del Producto">
+  <input id="descripcion" placeholder="Descripción">
 
-    <script>
-        function agregarProductos() {
-            fetch('http://localhost:4000/api/productos', {
-                method: 'POST',
-                headers: {'Content-Type' : 'application/json'},
-                body: JSON.stringify({
-                    nombre: document.getElementById('nombre').value,
-                    descripcion: document.getElementById('descripcion').value,
-                    precio: document.getElementById('precio').value,
-                    stock: document.getElementById('stock').value,
-                    stock_minimo: document.getElementById('stock_minimo').value
-                })
-            })
-            .then(res => res.json()) // .json() para que lea la respuesta correctamente en ese formato
-            .then(data => {alert(data.msg || "Producto Agregado"); obtenerProductos();})
-            .catch(error => console.error('Error:', error));
-        }
+  <!-- números -->
+  <input id="precio" type="number" step="0.01" min="0" placeholder="Precio ($00.00)">
+  <input id="stock" type="number" step="1" min="0" placeholder="Cantidad Disponible">
+  <input id="stock_minimo" type="number" step="1" min="0" placeholder="Cantidad Disponible Mínima">
 
-        function obtenerProductos() {
-            fetch('http://localhost:4000/api/productos')
-            .then(res => res.json())
-            .then(data => {
-                let lista = document.getElementById('lista');
-                lista.innerHTML = ''; // Limpia la lista antes de llenarla
-                
-                // Verifica que la peticion tenga exito y exista el arreglo "datos"
-                if (data.exito && data.datos) {
-                    data.datos.forEach(producto => {
-                        // Ahora sí, agregamos el HTML a la variable "lista"
-                        lista.innerHTML += `<li> ${producto.nombre} - $${producto.precio} || Cantidad Disponible: ${producto.stock} </li>`;
-                    });
-                } else {
-                    lista.innerHTML = '<li>No hay registros.</li>';
-                }
-            })
-            .catch(error => console.error('Error:', error)); // Siempre es bueno atrapar errores en consola
-        }
+  <button onclick="agregarProductos()">Guardar</button>
 
-        // Llamamos a la función al cargar la página
+  <hr>
+
+  <h2>Listado de productos (GET /api/productos)</h2>
+  <ul id="lista"></ul>
+
+  <hr>
+
+  <h2>Productos con stock bajo (GET /api/productos/stock-bajo)</h2>
+  <button onclick="obtenerStockBajo()">Ver stock bajo</button>
+  <ul id="listaStockBajo"></ul>
+
+  <hr>
+
+  <h2>Productos más vendidos (GET /api/productos/mas-vendidos)</h2>
+  <button onclick="obtenerMasVendidos()">Ver más vendidos</button>
+  <ul id="listaMasVendidos"></ul>
+
+  <script>
+    const API = 'http://localhost:4000/api/productos';
+
+    function agregarProductos() {
+      const payload = {
+        nombre: document.getElementById('nombre').value,
+        descripcion: document.getElementById('descripcion').value,
+        // convertimos a número para evitar mandar string
+        precio: Number(document.getElementById('precio').value),
+        stock: Number(document.getElementById('stock').value),
+        stock_minimo: Number(document.getElementById('stock_minimo').value)
+      };
+
+      fetch(API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.msg || 'Error al agregar producto');
+        return data;
+      })
+      .then(data => {
+        alert(data.msg || 'Producto agregado');
         obtenerProductos();
-    </script>
+      })
+      .catch(error => alert(error.message));
+    }
+
+    function obtenerProductos() {
+      fetch(API)
+        .then(res => res.json())
+        .then(data => {
+          const lista = document.getElementById('lista');
+          lista.innerHTML = '';
+
+          if (data.exito && data.datos) {
+            data.datos.forEach(p => {
+              lista.innerHTML += `<li>[${p.id_producto}] ${p.nombre} - $${Number(p.precio).toFixed(2)} | Stock: ${p.stock}</li>`;
+            });
+          } else {
+            lista.innerHTML = '<li>No hay registros.</li>';
+          }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function obtenerStockBajo() {
+      fetch(`${API}/stock-bajo`)
+        .then(res => res.json())
+        .then(data => {
+          const lista = document.getElementById('listaStockBajo');
+          lista.innerHTML = '';
+
+          if (data.exito && data.datos) {
+            if (data.datos.length === 0) {
+              lista.innerHTML = '<li>No hay productos con stock bajo.</li>';
+              return;
+            }
+            data.datos.forEach(p => {
+              lista.innerHTML += `<li>[${p.id_producto}] ${p.nombre} | Stock: ${p.stock} | Mínimo: ${p.stock_minimo}</li>`;
+            });
+          } else {
+            lista.innerHTML = '<li>No hay datos.</li>';
+          }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function obtenerMasVendidos() {
+      fetch(`${API}/mas-vendidos`)
+        .then(res => res.json())
+        .then(data => {
+          const lista = document.getElementById('listaMasVendidos');
+          lista.innerHTML = '';
+
+          if (data.exito && data.datos) {
+            if (data.datos.length === 0) {
+              lista.innerHTML = '<li>No hay ventas registradas.</li>';
+              return;
+            }
+            data.datos.forEach(p => {
+              lista.innerHTML += `<li>[${p.id_producto}] ${p.nombre} | Total vendido: ${p.total_vendido}</li>`;
+            });
+          } else {
+            lista.innerHTML = '<li>No hay datos.</li>';
+          }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    // carga inicial
+    obtenerProductos();
+  </script>
 
 </body>
 </html>

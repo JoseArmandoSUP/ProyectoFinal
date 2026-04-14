@@ -1,65 +1,186 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registrar Venta</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Registrar Venta</title>
 </head>
 <body>
-    
-    <h2>Registrar Venta</h2>
 
-    <input id="cliente_id" placeholder="Cliente ID">
-    <input id="empleado_id" placeholder="Empleado ID">
-    <input id="sucursal_id" placeholder="Sucursal ID">
+  <h2>Registrar Venta</h2>
 
-    <h3>Producto</h3>
+  <!-- Mejor con type="number" para evitar strings -->
+  <input id="cliente_id" type="number" min="1" placeholder="Cliente ID">
+  <input id="empleado_id" type="number" min="1" placeholder="Empleado ID">
+  <input id="sucursal_id" type="number" min="1" placeholder="Sucursal ID">
 
-    <input id="producto_id" placeholder="Producto ID">
-    <input id="cantidad" placeholder="Cantidad">
-    <input id="precio" placeholder="Precio">
+  <hr>
 
-    <button onclick="agregarProducto()">Agregar Producto</button>
-    <button onclick="registrarVenta()">Registrar Venta</button>
+  <h3>Producto</h3>
 
-    <ul id="lista"></ul>
+  <input id="producto_id" type="number" min="1" placeholder="Producto ID">
+  <input id="cantidad" type="number" min="1" step="1" placeholder="Cantidad">
+  <input id="precio" type="number" min="0" step="0.01" placeholder="Precio">
 
-    <script>
-        let productos = [];
+  <button onclick="agregarProducto()">Agregar Producto</button>
+  <button onclick="registrarVenta()">Registrar Venta</button>
 
-        function agregarProducto() {
-            let producto = {
-                producto_id: document.getElementById('producto_id').value,
-                cantidad: document.getElementById('cantidad').value,
-                precio: document.getElementById('precio').value
-            };
+  <h4>Productos agregados</h4>
+  <ul id="lista"></ul>
 
-            productos.push(producto);
+  <hr>
 
-            let lista = document.getElementById('lista');
-            lista.innerHTML += `<li>Producto ${producto.producto_id} - Cantidad ${producto.cantidad}</li>`;
-        }
+  <h3>Reportes (endpoints nuevos en /api/venta)</h3>
 
-        function registrarVenta() {
-            fetch('http://localhost:4000/api/venta', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    cliente_id: document.getElementById('cliente_id').value,
-                    empleado_id: document.getElementById('empleado_id').value,
-                    sucursal_id: document.getElementById('sucursal_id').value,
-                    productos: productos
-                })
-            })
-            .then(res => res.json())
-            .then(data => {
-                alert(data.msg || "Venta Registrada");
-                productos = [];
-                document.getElementById('lista').innerHTML = '';
-            })
-            .catch(error => console.error("Error", error));
-        }
-    </script>
+  <button onclick="verClasificacion()">Ver clientes con clasificación</button>
+  <ul id="listaClasificacion"></ul>
+
+  <button onclick="verSuperiorPromedio()">Ver clientes con compras superiores al promedio</button>
+  <ul id="listaSuperiorPromedio"></ul>
+
+  <h4>Historial por cliente</h4>
+  <input id="historial_id_cliente" type="number" min="1" placeholder="id_cliente (ej. 1)">
+  <button onclick="verHistorial()">Ver historial</button>
+  <ul id="listaHistorial"></ul>
+
+  <script>
+    // OJO: tu ruta es /api/venta (singular), la dejo igual
+    const API = 'http://localhost:4000/api/venta';
+
+    let productos = [];
+
+    function agregarProducto() {
+      const producto_id = Number(document.getElementById('producto_id').value);
+      const cantidad = Number(document.getElementById('cantidad').value);
+      const precio = Number(document.getElementById('precio').value);
+
+      if (!producto_id || producto_id <= 0) return alert('producto_id inválido');
+      if (!cantidad || cantidad <= 0) return alert('cantidad inválida');
+      if (precio === '' || Number.isNaN(precio) || precio <= 0) return alert('precio inválido');
+
+      const producto = { producto_id, cantidad, precio };
+      productos.push(producto);
+
+      renderProductos();
+
+      // opcional: limpiar inputs de producto
+      document.getElementById('producto_id').value = '';
+      document.getElementById('cantidad').value = '';
+      document.getElementById('precio').value = '';
+    }
+
+    function renderProductos() {
+      const lista = document.getElementById('lista');
+      lista.innerHTML = '';
+      productos.forEach((p, idx) => {
+        lista.innerHTML += `
+          <li>
+            #${idx + 1} Producto ${p.producto_id} | Cantidad ${p.cantidad} | Precio $${p.precio}
+            <button onclick="quitarProducto(${idx})">Quitar</button>
+          </li>
+        `;
+      });
+    }
+
+    function quitarProducto(index) {
+      productos.splice(index, 1);
+      renderProductos();
+    }
+
+    function limpiarTodo() {
+      productos = [];
+      document.getElementById('lista').innerHTML = '';
+    }
+
+    async function registrarVenta() {
+      const cliente_id = Number(document.getElementById('cliente_id').value);
+      const empleado_id = Number(document.getElementById('empleado_id').value);
+      const sucursal_id = Number(document.getElementById('sucursal_id').value);
+
+      if (!cliente_id || cliente_id <= 0) return alert('cliente_id inválido');
+      if (!empleado_id || empleado_id <= 0) return alert('empleado_id inválido');
+      if (!sucursal_id || sucursal_id <= 0) return alert('sucursal_id inválido');
+      if (!Array.isArray(productos) || productos.length === 0) return alert('Agrega al menos 1 producto');
+
+      try {
+        const res = await fetch(API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cliente_id, empleado_id, sucursal_id, productos })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.msg || data.error || 'Error al registrar venta');
+
+        alert(`${data.msg || 'Venta registrada'} | id_venta: ${data.id_venta} | total: $${data.total_venta}`);
+        limpiarTodo();
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    // ------------------------------------------------------------------
+    // Reportes (nuevos endpoints)
+    // ------------------------------------------------------------------
+
+    function verClasificacion() {
+      fetch(`${API}/clientes/clasificacion`)
+        .then(res => res.json())
+        .then(data => {
+          const lista = document.getElementById('listaClasificacion');
+          lista.innerHTML = '';
+          if (data.exito && data.datos) {
+            data.datos.forEach(c => {
+              lista.innerHTML += `<li>[${c.id_cliente}] ${c.nombre} → ${c.tipo_cliente}</li>`;
+            });
+          } else {
+            lista.innerHTML = '<li>No hay datos</li>';
+          }
+        })
+        .catch(err => console.error(err));
+    }
+
+    function verSuperiorPromedio() {
+      fetch(`${API}/clientes/compras/superiores-promedio`)
+        .then(res => res.json())
+        .then(data => {
+          const lista = document.getElementById('listaSuperiorPromedio');
+          lista.innerHTML = '';
+          if (data.exito && data.datos) {
+            data.datos.forEach(c => {
+              lista.innerHTML += `<li>[${c.id_cliente}] ${c.nombre} → compras: $${Number(c.compras_hechas).toFixed(2)}</li>`;
+            });
+          } else {
+            lista.innerHTML = '<li>No hay datos</li>';
+          }
+        })
+        .catch(err => console.error(err));
+    }
+
+    function verHistorial() {
+      const id = Number(document.getElementById('historial_id_cliente').value);
+      if (!id || id <= 0) return alert('id_cliente inválido');
+
+      fetch(`${API}/clientes/${id}/historial`)
+        .then(res => res.json())
+        .then(data => {
+          const lista = document.getElementById('listaHistorial');
+          lista.innerHTML = '';
+          if (data.exito && data.datos) {
+            if (data.datos.length === 0) {
+              lista.innerHTML = '<li>Sin ventas para este cliente</li>';
+              return;
+            }
+            data.datos.forEach(v => {
+              lista.innerHTML += `<li>Venta #${v.id_venta} | Fecha: ${v.fecha} | Total: $${Number(v.total).toFixed(2)}</li>`;
+            });
+          } else {
+            lista.innerHTML = '<li>No hay datos</li>';
+          }
+        })
+        .catch(err => console.error(err));
+    }
+  </script>
 
 </body>
 </html>
