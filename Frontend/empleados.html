@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Empleados</title>
+</head>
+<body>
+    
+    <h1>Agregar Empleado</h1>
+
+    <input id="nombre" placeholder="Nombre(s)">
+    <input id="apellido_p" placeholder="Apellido Paterno">
+    <input id="apellido_m" placeholder="Apellido Materno">
+    <input id="salario" placeholder="Salario">
+    <input id="fecha_contratacion" placeholder="Fecha de Contratación">
+    <input id="sucursal_id" placeholder="ID de Sucursal">
+
+    <button onclick="agregarEmpleado()">Guardar</button>
+    <ul id="lista"></ul>
+
+    <script>
+
+        function agregarEmpleado() {
+            fetch('http://localhost:4000/api/empleados', {
+                method: 'POST',
+                headers: {'Content-Type' : 'application/json'},
+                body: JSON.stringify({
+                    nombre: document.getElementById('nombre').value,
+                    apellido_p: document.getElementById('apellido_p').value,
+                    apellido_m: document.getElementById('apellido_m').value,
+                    salario: document.getElementById('salario').value,
+                    fecha_contratacion: document.getElementById('fecha_contratacion').value,
+                    sucursal_id: document.getElementById('sucursal_id').value
+                })
+            })
+            .then(res => res.json()) // .json() para que lea la respuesta correctamente en ese formato
+            .then(data => {alert(data.msg || "Empleado agregado"); obtenerEmpleados();})
+            .catch(error => console.error('Error:', error));
+        }
+
+        function obtenerEmpleados() {
+            fetch('http://localhost:4000/api/empleados').then(res => res.json())
+            .then(data => {
+                let lista = document.getElementById('lista');
+                lista.innerHTML = ''; // Limpia la lista antes de llenarla
+                if(data.exito && data.datos){
+                    data.datos.forEach(empleado => {lista.innerHTML += `<li>${empleado.nombre} ${empleado.apellido_p} ${empleado.apellido_m} ${empleado.sucursal_id}</li>`});
+                }else{
+                    lista.innerHTML = '<ul> No hay registros </ul>'
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        obtenerEmpleados();
+        
+    </script>
+
+</body>
+</html>
