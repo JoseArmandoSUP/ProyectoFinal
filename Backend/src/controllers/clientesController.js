@@ -144,8 +144,6 @@ const obtenerHistorialCliente = async (req, res) => {
       return res.status(400).json({ exito: false, msg: 'id_cliente inválido' });
     }
 
-    // mysql2/promise suele regresar un array de result sets:
-    // resultSets[0] = rows del SELECT interno del procedimiento
     const [resultSets] = await pool.query('CALL historial_cliente(?)', [id_cliente]);
     const datos = Array.isArray(resultSets) ? (resultSets[0] || []) : [];
 
