@@ -569,6 +569,10 @@ grant select on sistema_empresarial_ventas.vista_ventas_empleado to 'analista';
 grant select on sistema_empresarial_ventas.ventas_por_sucursal to 'analista';
 grant select on sistema_empresarial_ventas.vista_clientes_tipo to 'analista';
 
+-- Permisos de ejecucion para las funciones usadas en las vistas
+grant execute on function sistema_empresarial_ventas.ventasXempleado to 'analista';
+grant execute on function sistema_empresarial_ventas.clasificacion_cliente to 'analista';
+
 -- 3. CREACION DE USUARIOS Y ASIGNACION
 create user 'usu_admin'@'localhost' identified by 'admin123';
 create user 'usu_vendedor'@'localhost' identified by 'vende123';
