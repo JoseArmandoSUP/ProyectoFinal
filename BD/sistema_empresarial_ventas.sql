@@ -377,7 +377,7 @@ deterministic
 	end $$
 delimiter ;
 
---3.- CALCULAR TOTAL DE VENTA
+-- 3.- CALCULAR TOTAL DE VENTA
 delimiter $$
 -- Elimina la funcion si ya existe
 drop function if exists calcular_total_venta $$
