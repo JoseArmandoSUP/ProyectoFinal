@@ -1,8 +1,8 @@
 CREATE DATABASE sistema_empresarial_ventas;
 USE sistema_empresarial_ventas;
 -- Lineas en donde empieza cada cosa:
--- 238 Consultas || 278 Vistas || 337 Funciones || 383 Procedimientos || 441 Trigger || 477 Transaccion 
--- 536 Usuarios y Roles || 616 Indices
+-- 238 Consultas || 278 Vistas || 337 Funciones || 397 Procedimientos || 455 Trigger || 491 Transaccion 
+-- 550 Usuarios y Roles || 643 Indices
 
 CREATE TABLE clientes (
     id_cliente INT PRIMARY KEY AUTO_INCREMENT,
@@ -377,7 +377,7 @@ deterministic
 	end $$
 delimiter ;
 
---3.- CALCULAR TOTAL DE VENTA
+-- 3.- CALCULAR TOTAL DE VENTA
 delimiter $$
 -- Elimina la funcion si ya existe
 drop function if exists calcular_total_venta $$
@@ -549,7 +549,7 @@ select * from ventas; -- Nueva venta reflejada si la transaccion tiene exito
 
 -- 													USUARIOS Y ROLES
 
-sistema_empresarial_ventas-- =========================================================
+-- =========================================================
 -- ROLES + USUARIOS + PRIVILEGIOS (MariaDB)
 -- BD: sistema_empresarial_ventas
 -- =========================================================
@@ -604,7 +604,7 @@ GRANT vendedor TO 'usu_vendedor'@'localhost';
 GRANT analista TO 'usu_analista'@'localhost';
 
 
--- 5) Rol por defecto al iniciar sesión (MariaDB) 
+
 SET DEFAULT ROLE admin FOR 'usu_admin'@'localhost';
 SET DEFAULT ROLE vendedor FOR 'usu_vendedor'@'localhost';
 SET DEFAULT ROLE analista FOR 'usu_analista'@'localhost';
