@@ -604,7 +604,7 @@ GRANT vendedor TO 'usu_vendedor'@'localhost';
 GRANT analista TO 'usu_analista'@'localhost';
 
 
--- 5) Rol por defecto al iniciar sesión (MariaDB)  ✅
+-- 5) Rol por defecto al iniciar sesión (MariaDB) 
 SET DEFAULT ROLE admin FOR 'usu_admin'@'localhost';
 SET DEFAULT ROLE vendedor FOR 'usu_vendedor'@'localhost';
 SET DEFAULT ROLE analista FOR 'usu_analista'@'localhost';

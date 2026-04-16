@@ -1,63 +1,105 @@
-// Ya NO uses el pool global aquí
-// const pool = require('../config/db');
-
+// No uses pool global; usa req.db (inyectado por middleware withDbRole)
 const getDb = (req) => {
   if (!req.db) throw new Error('DB no inicializada en req.db (falta withDbRole en la ruta)');
   return req.db;
 };
 
-const registrarVenta = async (req, res) => {
-  // IMPORTANTE: para transacciones necesitamos una conexión, no solo db.query
-  const db = getDb(req);
-  const conn = await db.getConnection(); // db debe ser un pool mysql2/promise
-  try {
-    const cliente_id = req.body.cliente_id;
-    const empleado_id = req.body.empleado_id;
-    const sucursal_id = req.body.sucursal_id;
-    const productos = req.body.productos;
+// Obtiene conexión para transacción tanto si req.db es pool como si es connection
+const getConn = async (db) => {
+  // Pool mysql2/promise tiene getConnection()
+  if (typeof db.getConnection === 'function') return db.getConnection();
+  // Si ya te pasaron una conexión (no recomendado), úsala igual
+  if (typeof db.beginTransaction === 'function' && typeof db.query === 'function') return db;
+  throw new Error('req.db no es un pool/connection compatible con mysql2/promise');
+};
 
-    if (!cliente_id || !empleado_id || !sucursal_id) {
-      return res.status(400).json({ exito: false, msg: 'cliente_id, empleado_id y sucursal_id son requeridos' });
+const registrarVenta = async (req, res) => {
+  const db = getDb(req);
+  const conn = await getConn(db);
+
+  const {
+    cliente_id,
+    empleado_id,
+    sucursal_id,
+    productos
+  } = req.body ?? {};
+
+  try {
+    // Validaciones básicas
+    if (!Number.isInteger(+cliente_id) || +cliente_id <= 0 ||
+        !Number.isInteger(+empleado_id) || +empleado_id <= 0 ||
+        !Number.isInteger(+sucursal_id) || +sucursal_id <= 0) {
+      return res.status(400).json({
+        exito: false,
+        msg: 'cliente_id, empleado_id y sucursal_id deben ser números enteros > 0'
+      });
     }
+
     if (!Array.isArray(productos) || productos.length === 0) {
-      return res.status(400).json({ exito: false, msg: 'productos debe ser un arreglo con al menos 1 producto' });
+      return res.status(400).json({
+        exito: false,
+        msg: 'productos debe ser un arreglo con al menos 1 producto'
+      });
+    }
+
+    // Validar productos ANTES de iniciar transacción
+    for (const [i, p] of productos.entries()) {
+      const producto_id = +p.producto_id;
+      const cantidad = +p.cantidad;
+      const precio = +p.precio;
+
+      if (!Number.isInteger(producto_id) || producto_id <= 0) {
+        return res.status(400).json({ exito: false, msg: `producto_id inválido en item #${i + 1}` });
+      }
+      if (!Number.isFinite(cantidad) || cantidad <= 0) {
+        return res.status(400).json({ exito: false, msg: `cantidad inválida en item #${i + 1}` });
+      }
+      if (!Number.isFinite(precio) || precio <= 0) {
+        return res.status(400).json({ exito: false, msg: `precio inválido en item #${i + 1}` });
+      }
     }
 
     await conn.beginTransaction();
 
-    let total = 0;
-
-    // Insertar venta con total=0 (se recalcula al final)
-    const [resultado] = await conn.query(
+    // Crear venta con total=0 (se actualiza al final)
+    const [rVenta] = await conn.query(
       'INSERT INTO ventas (total, cliente_id, empleado_id, sucursal_id) VALUES (0, ?, ?, ?)',
-      [cliente_id, empleado_id, sucursal_id]
+      [+cliente_id, +empleado_id, +sucursal_id]
     );
 
-    const venta_id = resultado.insertId;
+    const venta_id = rVenta.insertId;
 
-    for (const prod of productos) {
-      if (!prod.producto_id || !prod.cantidad || !prod.precio) {
-        await conn.rollback();
-        return res.status(400).json({ exito: false, msg: 'Cada producto debe incluir producto_id, cantidad y precio' });
-      }
+    let total = 0;
 
-      const subtotal = Number(prod.cantidad) * Number(prod.precio);
-      total += subtotal;
+    for (const p of productos) {
+      const producto_id = +p.producto_id;
+      const cantidad = +p.cantidad;
+      const precio = +p.precio;
 
-      // Insertar detalle (si no hay stock, tu trigger lanza error y se hace rollback)
+      const subtotal = Number((cantidad * precio).toFixed(2));
+      total = Number((total + subtotal).toFixed(2));
+
+      // Insertar detalle
       await conn.query(
-        'INSERT INTO detalle_ventas (venta_id, producto_id, cantidad, precio_unitario, subtotal) VALUES (?, ?, ?, ?, ?)',
-        [venta_id, prod.producto_id, prod.cantidad, prod.precio, subtotal]
+        `INSERT INTO detalle_ventas
+         (venta_id, producto_id, cantidad, precio_unitario, subtotal)
+         VALUES (?, ?, ?, ?, ?)`,
+        [venta_id, producto_id, cantidad, precio, subtotal]
       );
 
-      // Actualizar stock
-      await conn.query(
+      // Actualizar stock (AJUSTA el nombre de la PK si no es id_producto)
+      const [rUpd] = await conn.query(
         'UPDATE productos SET stock = stock - ? WHERE id_producto = ?',
-        [prod.cantidad, prod.producto_id]
+        [cantidad, producto_id]
       );
+
+      // Si no encontró el producto, es mejor fallar y hacer rollback
+      if (rUpd.affectedRows === 0) {
+        throw new Error(`No existe el producto con id ${producto_id} (no se actualizó stock)`);
+      }
     }
 
-    // Actualizar total venta
+    // Actualizar total
     await conn.query(
       'UPDATE ventas SET total = ? WHERE id_venta = ?',
       [total, venta_id]
@@ -74,21 +116,21 @@ const registrarVenta = async (req, res) => {
   } catch (error) {
     try { await conn.rollback(); } catch (_) {}
 
+    // Devuelve también code/sqlMessage si viene de MySQL (mysql2)
     return res.status(500).json({
       exito: false,
       msg: 'Error en el servidor al Registrar Venta',
-      error: error.message
+      error: error?.code || error?.message || String(error),
+      sqlMessage: error?.sqlMessage
     });
   } finally {
-    try { conn.release(); } catch (_) {}
+    // Si conn viene de pool, tiene release(). Si es connection directa, no.
+    try { if (typeof conn.release === 'function') conn.release(); } catch (_) {}
   }
 };
 
-// -----------------------------------------------------------------------------
-// REPORTES / CONSULTAS relacionadas a CLIENTE (usando VENTAS)
-// -----------------------------------------------------------------------------
+// --- REPORTES ---
 
-// GET /api/venta/clientes/compras/superiores-promedio
 const clientesComprasSuperioresPromedio = async (req, res) => {
   try {
     const db = getDb(req);
@@ -99,18 +141,16 @@ const clientesComprasSuperioresPromedio = async (req, res) => {
       GROUP BY c.id_cliente, c.nombre
       HAVING compras_hechas > (SELECT AVG(total) FROM ventas)
     `);
-
     return res.json({ exito: true, datos: rows });
   } catch (error) {
     return res.status(500).json({
       exito: false,
       msg: 'Error en el servidor en Clientes con compras superiores al promedio',
-      error: error.message
+      error: error?.message || String(error)
     });
   }
 };
 
-// GET /api/venta/clientes/clasificacion
 const obtenerClientesConClasificacion = async (req, res) => {
   try {
     const db = getDb(req);
@@ -118,18 +158,16 @@ const obtenerClientesConClasificacion = async (req, res) => {
       SELECT id_cliente, nombre, clasificacion_cliente(id_cliente) AS tipo_cliente
       FROM clientes
     `);
-
     return res.json({ exito: true, datos: rows });
   } catch (error) {
     return res.status(500).json({
       exito: false,
       msg: 'Error en el servidor en Obtener Clientes con Clasificación',
-      error: error.message
+      error: error?.message || String(error)
     });
   }
 };
 
-// GET /api/venta/clientes/:id_cliente/historial
 const obtenerHistorialCliente = async (req, res) => {
   try {
     const db = getDb(req);
@@ -147,16 +185,11 @@ const obtenerHistorialCliente = async (req, res) => {
     return res.status(500).json({
       exito: false,
       msg: 'Error en el servidor en Historial de Cliente',
-      error: error.message
+      error: error?.message || String(error)
     });
   }
 };
 
-// -----------------------------------------------------------------------------
-// REPORTES / CONSULTAS relacionadas a VENTAS
-// -----------------------------------------------------------------------------
-
-// GET /api/venta/reportes/ventas-total-calculado
 const ventasTotalCalculado = async (req, res) => {
   try {
     const db = getDb(req);
@@ -168,13 +201,12 @@ const ventasTotalCalculado = async (req, res) => {
       FROM ventas v
       ORDER BY v.id_venta ASC
     `);
-
     return res.json({ exito: true, datos: rows });
   } catch (error) {
     return res.status(500).json({
       exito: false,
       msg: 'Error en el servidor en Ventas con total calculado',
-      error: error.message
+      error: error?.message || String(error)
     });
   }
 };
