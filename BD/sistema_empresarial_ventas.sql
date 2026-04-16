@@ -549,7 +549,7 @@ select * from ventas; -- Nueva venta reflejada si la transaccion tiene exito
 
 -- 													USUARIOS Y ROLES
 
-sistema_empresarial_ventas-- =========================================================
+-- =========================================================
 -- ROLES + USUARIOS + PRIVILEGIOS (MariaDB)
 -- BD: sistema_empresarial_ventas
 -- =========================================================
@@ -604,7 +604,7 @@ GRANT vendedor TO 'usu_vendedor'@'localhost';
 GRANT analista TO 'usu_analista'@'localhost';
 
 
--- 5) Rol por defecto al iniciar sesión (MariaDB)  ✅
+-- 5) Rol por defecto al iniciar sesión (MariaDB)  
 SET DEFAULT ROLE admin FOR 'usu_admin'@'localhost';
 SET DEFAULT ROLE vendedor FOR 'usu_vendedor'@'localhost';
 SET DEFAULT ROLE analista FOR 'usu_analista'@'localhost';
