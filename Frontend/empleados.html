@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Empleados</title>
+
+  <style>
+    :root{
+      --bg: #0b1220;
+      --card: rgba(255,255,255,.08);
+      --card2: rgba(255,255,255,.06);
+      --border: rgba(255,255,255,.14);
+      --text: #e8eefc;
+      --muted: rgba(232,238,252,.72);
+      --primary: #6ea8fe;
+      --danger: #ef4444;
+      --shadow: 0 18px 50px rgba(0,0,0,.45);
+      --radius: 18px;
+    }
+
+    *{ box-sizing: border-box; }
+
+    body{
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(900px 500px at 12% 10%, rgba(110,168,254,.28), transparent 60%),
+        radial-gradient(700px 450px at 90% 20%, rgba(34,197,94,.12), transparent 55%),
+        linear-gradient(180deg, #060a14, var(--bg));
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .app{
+      width: min(1200px, 100%);
+      margin: 0 auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      overflow: hidden;
+    }
+
+    header{
+      padding: 22px 24px 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+    }
+
+    header h1{
+      margin: 0;
+      font-size: clamp(1.2rem, 1rem + 1vw, 1.7rem);
+      letter-spacing: .2px;
+    }
+
+    header .actions{
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .link{
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.18);
+      color: var(--text);
+      text-decoration: none;
+      font-size: .92rem;
+      transition: transform .15s ease, border-color .15s ease, background .15s ease;
+      user-select: none;
+    }
+    .link:hover{
+      transform: translateY(-1px);
+      border-color: rgba(110,168,254,.5);
+      background: rgba(255,255,255,.06);
+    }
+
+    main{
+      padding: 18px 24px 24px 24px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .grid{
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 16px;
+      align-items: start;
+    }
+    @media (max-width: 980px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .card{
+      background: var(--card2);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+
+    .card h2{
+      margin: 0 0 10px 0;
+      font-size: 1.05rem;
+      letter-spacing: .2px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .hint{
+      color: var(--muted);
+      font-size: .92rem;
+      margin: 0 0 12px 0;
+      line-height: 1.35;
+    }
+
+    .badge{
+      font-size: .82rem;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.18);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .form{
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 10px;
+    }
+
+    .field{
+      grid-column: span 6;
+      display: grid;
+      gap: 6px;
+    }
+    .field.third{ grid-column: span 4; }
+    .field.full{ grid-column: span 12; }
+
+    @media (max-width: 720px){
+      .field, .field.third{ grid-column: span 12; }
+    }
+
+    label{
+      font-size: .88rem;
+      color: var(--muted);
+    }
+
+    input{
+      width: 100%;
+      padding: 11px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.22);
+      color: var(--text);
+      outline: none;
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    input::placeholder{ color: rgba(232,238,252,.45); }
+    input:focus{
+      border-color: rgba(110,168,254,.65);
+      box-shadow: 0 0 0 4px rgba(110,168,254,.18);
+    }
+
+    .btn-row{
+      grid-column: span 12;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+
+    button{
+      border: 0;
+      padding: 11px 14px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(110,168,254,.95), rgba(110,168,254,.55));
+      color: #061025;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform .12s ease, filter .12s ease;
+    }
+    button:hover{ transform: translateY(-1px); filter: brightness(1.02); }
+    button:active{ transform: translateY(0px); }
+
+    .btn-secondary{
+      background: rgba(255,255,255,.10);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,.14);
+      font-weight: 650;
+    }
+    .btn-secondary:hover{
+      border-color: rgba(110,168,254,.45);
+    }
+
+    .btn-danger{
+      background: rgba(239,68,68,.18);
+      border: 1px solid rgba(239,68,68,.35);
+      color: var(--text);
+    }
+    .btn-danger:hover{
+      border-color: rgba(239,68,68,.55);
+    }
+
+    .list{
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 10px;
+    }
+
+    .item{
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      display: grid;
+      gap: 6px;
+    }
+
+    .item .top{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .item .title{
+      font-weight: 800;
+      letter-spacing: .2px;
+      font-size: .95rem;
+    }
+
+    .item .meta{
+      color: var(--muted);
+      font-size: .88rem;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .mini-btn{
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-weight: 750;
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.14);
+      color: var(--text);
+      cursor: pointer;
+    }
+    .mini-btn:hover{
+      border-color: rgba(239,68,68,.55);
+    }
+
+    .section-actions{
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin: 8px 0 10px 0;
+    }
+
+    .split{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 980px){
+      .split{ grid-template-columns: 1fr; }
+    }
+
+    .toast{
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,.65);
+      border: 1px solid rgba(255,255,255,.14);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 999px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      display: none;
+      max-width: min(680px, calc(100% - 36px));
+      text-align: center;
+      font-size: .92rem;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <header>
+      <h1>Empleados</h1>
+      <div class="actions">
+        <a class="link" href="index.html">← Menú</a>
+        <span class="badge" title="API base">API: http://localhost:4000/api/empleados</span>
+      </div>
+    </header>
+
+    <main>
+      <div class="grid">
+        <!-- FORM -->
+        <section class="card">
+          <h2>Agregar empleado <span class="badge">POST</span></h2>
+          <p class="hint">Registra un empleado. Después se actualizará el listado.</p>
+
+          <div class="form">
+            <div class="field">
+              <label for="nombre">Nombre</label>
+              <input id="nombre" placeholder="Nombre">
+            </div>
+
+            <div class="field">
+              <label for="salario">Salario</label>
+              <input id="salario" type="number" step="0.01" min="0" placeholder="Salario">
+            </div>
+
+            <div class="field">
+              <label for="apellido_p">Apellido paterno</label>
+              <input id="apellido_p" placeholder="Apellido paterno">
+            </div>
+
+            <div class="field">
+              <label for="apellido_m">Apellido materno</label>
+              <input id="apellido_m" placeholder="Apellido materno">
+            </div>
+
+            <div class="field third">
+              <label for="fecha_contratacion">Fecha de contratación</label>
+              <input id="fecha_contratacion" type="date">
+            </div>
+
+            <div class="field third">
+              <label for="sucursal_id">Sucursal ID</label>
+              <input id="sucursal_id" type="number" min="1" placeholder="Sucursal ID">
+            </div>
+
+            <div class="field third">
+              <label for="buscar_sucursal_id">Filtrar por sucursal</label>
+              <input id="buscar_sucursal_id" type="number" min="1" placeholder="Sucursal ID">
+            </div>
+
+            <div class="btn-row">
+              <button type="button" onclick="crearEmpleado()">Guardar</button>
+              <button class="btn-secondary" type="button" onclick="limpiarFormulario()">Limpiar</button>
+              <button class="btn-secondary" type="button" onclick="cargarEmpleados()">Actualizar listado</button>
+              <button class="btn-secondary" type="button" onclick="cargarEmpleadosPorSucursal()">Filtrar</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- LISTADO -->
+        <section class="card">
+          <h2>Listado de empleados <span class="badge">GET</span></h2>
+          <p class="hint">Se carga automáticamente al abrir la página.</p>
+          <ul id="lista" class="list"></ul>
+        </section>
+      </div>
+
+      <div class="split">
+        <section class="card">
+          <h2>Ventas por empleado <span class="badge">GET /reportes/ventas-por-empleado-vista</span></h2>
+          <div class="section-actions">
+            <button class="btn-secondary" type="button" onclick="verVentasPorEmpleado()">Ver</button>
+          </div>
+          <ul id="listaVentasPorEmpleado" class="list"></ul>
+        </section>
+
+        <section class="card">
+          <h2>Total vendido (función/vista) <span class="badge">GET /reportes/total-vendido-vista</span></h2>
+          <div class="section-actions">
+            <button class="btn-secondary" type="button" onclick="verTotalVendido()">Ver</button>
+          </div>
+          <ul id="listaTotalVendido" class="list"></ul>
+        </section>
+      </div>
+
+      <section class="card">
+        <h2>Eliminar / Buscar por ID <span class="badge">GET /:id · DELETE /:id</span></h2>
+        <div class="section-actions">
+          <div class="field" style="min-width: min(380px, 100%); margin: 0;">
+            <label for="empleado_id_accion">id_empleado</label>
+            <input id="empleado_id_accion" type="number" min="1" placeholder="id_empleado (ej. 1)">
+          </div>
+          <button class="btn-secondary" type="button" onclick="buscarEmpleadoPorId()">Buscar</button>
+          <button class="btn-danger" type="button" onclick="eliminarEmpleado()">Eliminar</button>
+        </div>
+
+        <ul id="listaEmpleadoById" class="list"></ul>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    // ----------------------- AUTH HELPER (NUEVO) -----------------------
+    const API_BASE = 'http://localhost:4000/api';
+    const token = localStorage.getItem('token');
+    if (!token) location.href = 'login.html';
+
+    async function apiFetch(path, options = {}) {
+      const headers = { ...(options.headers || {}), Authorization: `Bearer ${token}` };
+      if (options.body && !headers['Content-Type']) headers['Content-Type'] = 'application/json';
+
+      const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.msg || data.error || `HTTP ${res.status}`);
+      return data;
+    }
+
+    // ----------------------- UI -----------------------
+    function toast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.display = 'block';
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => t.style.display = 'none', 2600);
+    }
+
+    function limpiarFormulario(){
+      ['nombre','apellido_p','apellido_m','salario','fecha_contratacion','sucursal_id','buscar_sucursal_id']
+        .forEach(id => document.getElementById(id).value = '');
+      toast('Formulario limpio');
+    }
+
+    function renderLista(elId, rows, renderItemFn, emptyMsg){
+      const ul = document.getElementById(elId);
+      ul.innerHTML = '';
+      if (!rows || !rows.length){
+        ul.innerHTML = `<li class="item"><div class="meta">${emptyMsg || 'Sin datos'}</div></li>`;
+        return;
+      }
+      rows.forEach(r => ul.appendChild(renderItemFn(r)));
+    }
+
+    function liEmpleado(e){
+      const li = document.createElement('li');
+      li.className = 'item';
+      li.innerHTML = `
+        <div class="top">
+          <div class="title">[${e.id_empleado}] ${e.nombre} ${e.apellido_p} ${e.apellido_m}</div>
+          <span class="badge">$${Number(e.salario).toFixed(2)}</span>
+        </div>
+        <div class="meta">
+          <span>Contratación: ${e.fecha_contratacion}</span>
+          <span>Sucursal: ${e.sucursal_id}</span>
+        </div>
+      `;
+      return li;
+    }
+
+    async function crearEmpleado(){
+      const payload = {
+        nombre: document.getElementById('nombre').value,
+        apellido_p: document.getElementById('apellido_p').value,
+        apellido_m: document.getElementById('apellido_m').value,
+        salario: Number(document.getElementById('salario').value),
+        fecha_contratacion: document.getElementById('fecha_contratacion').value,
+        sucursal_id: Number(document.getElementById('sucursal_id').value)
+      };
+
+      try{
+        const data = await apiFetch('/empleados', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+
+        toast(`${data.msg || 'Empleado creado'} (id: ${data.id_empleado})`);
+        cargarEmpleados();
+      }catch(err){
+        toast(err.message);
+      }
+    }
+
+    async function cargarEmpleados(){
+      try{
+        const data = await apiFetch('/empleados');
+        if (!data.exito) throw new Error(data.msg || 'No se pudo cargar empleados');
+        renderLista('lista', data.datos, liEmpleado, 'No hay empleados');
+      }catch(err){
+        toast(err.message || 'Error al cargar empleados');
+      }
+    }
+
+    async function cargarEmpleadosPorSucursal(){
+      const suc = Number(document.getElementById('buscar_sucursal_id').value);
+      if (!suc || suc <= 0) return toast('Sucursal ID inválido');
+
+      try{
+        const data = await apiFetch(`/empleados/sucursal/${suc}`);
+        if (!data.exito) throw new Error(data.msg || 'No se pudo filtrar');
+        renderLista('lista', data.datos, liEmpleado, 'No hay empleados para esa sucursal');
+        toast(`Filtro aplicado: sucursal ${suc}`);
+      }catch(err){
+        toast(err.message || 'Error al filtrar por sucursal');
+      }
+    }
+
+    async function verVentasPorEmpleado(){
+      try{
+        const data = await apiFetch('/empleados/reportes/ventas-por-empleado-vista');
+        if (!data.exito) throw new Error(data.msg || 'No se pudo cargar reporte');
+
+        renderLista('listaVentasPorEmpleado', data.datos, (x) => {
+          const li = document.createElement('li');
+          li.className = 'item';
+          li.innerHTML = `
+            <div class="top">
+              <div class="title">[${x.id_empleado}] ${x.nombre_empleado}</div>
+              <span class="badge">$${Number(x.monto_total).toFixed(2)}</span>
+            </div>
+            <div class="meta">
+              <span>Total ventas: ${x.total_ventas}</span>
+            </div>
+          `;
+          return li;
+        }, 'No hay datos');
+      }catch(err){
+        toast(err.message || 'Error al cargar ventas por empleado');
+      }
+    }
+
+    async function verTotalVendido(){
+      try{
+        const data = await apiFetch('/empleados/reportes/total-vendido-vista');
+        if (!data.exito) throw new Error(data.msg || 'No se pudo cargar reporte');
+
+        renderLista('listaTotalVendido', data.datos, (x) => {
+          const li = document.createElement('li');
+          li.className = 'item';
+          li.innerHTML = `
+            <div class="top">
+              <div class="title">[${x.id_empleado}] ${x.nombre}</div>
+              <span class="badge">$${Number(x.total_vendido).toFixed(2)}</span>
+            </div>
+            <div class="meta">Total vendido por empleado</div>
+          `;
+          return li;
+        }, 'No hay datos');
+      }catch(err){
+        toast(err.message || 'Error al cargar total vendido');
+      }
+    }
+
+    async function buscarEmpleadoPorId(){
+      const id = Number(document.getElementById('empleado_id_accion').value);
+      if (!id || id <= 0) return toast('id_empleado inválido');
+
+      try{
+        const data = await apiFetch(`/empleados/${id}`);
+        const arr = data.exito && data.datos ? [data.datos] : [];
+        renderLista('listaEmpleadoById', arr, liEmpleado, 'No encontrado');
+      }catch(err){
+        toast(err.message || 'Error al buscar empleado');
+      }
+    }
+
+    async function eliminarEmpleado(){
+      const id = Number(document.getElementById('empleado_id_accion').value);
+      if (!id || id <= 0) return toast('id_empleado inválido');
+
+      if (!confirm(`¿Eliminar empleado #${id}?`)) return;
+
+      try{
+        const data = await apiFetch(`/empleados/${id}`, { method: 'DELETE' });
+        toast(data.msg || 'Empleado eliminado');
+        document.getElementById('listaEmpleadoById').innerHTML = '';
+        cargarEmpleados();
+      }catch(err){
+        toast(err.message || 'Error al eliminar');
+      }
+    }
+
+    // Carga inicial
+    cargarEmpleados();
+  </script>
+</body>
+</html>

@@ -376,6 +376,20 @@ deterministic
         );
 	end $$
 delimiter ;
+
+--3.- CALCULAR TOTAL DE VENTA
+delimiter $$
+-- Elimina la funcion si ya existe
+drop function if exists calcular_total_venta $$
+create function calcular_total_venta(p_venta_id INT)
+returns decimal(10, 2)
+deterministic
+	begin
+		declare total decimal(10, 2); -- variable para guradar el total
+        select sum(subtotal) into total from detalle_ventas where venta_id = p_venta_id; -- se suman los subtotales de detalle_venta
+        return ifnull(total, 0); -- IFNULL es para que evite devolver un NULL si no har registros
+	end $$
+delimiter ;  
 -- ------------------------------------------------------------------------------------------------------------------
 
 
@@ -535,86 +549,95 @@ select * from ventas; -- Nueva venta reflejada si la transaccion tiene exito
 
 -- 													USUARIOS Y ROLES
 
--- Limpieza de roles por si ya existian previamente
-drop role if exists 'admin', 'vendedor', 'analista';
-drop user if exists 'usu_admin'@'localhost', 'usu_vendedor'@'localhost', 'usu_analista'@'localhost';
+sistema_empresarial_ventas-- =========================================================
+-- ROLES + USUARIOS + PRIVILEGIOS (MariaDB)
+-- BD: sistema_empresarial_ventas
+-- =========================================================
 
--- 1. CREACION DE ROLES || Justificacion: Facilitan la administracion por grupos en lugar de asignar 
--- permisos a usuarios individuales.
-create role 'admin';
-create role 'vendedor';
-create role 'analista';
+-- 0) Limpieza (por si ya existían)
+DROP ROLE IF EXISTS admin;
+DROP ROLE IF EXISTS vendedor;
+DROP ROLE IF EXISTS analista;
 
--- 2. ASIGNACION DE PRIVILEGIOS A ROLES
-
--- Rol Admin (Administrador global) || Tiene todos los privilegios sobre todas las tablas, vistas y 
--- procedimientos de la BD. Resuelve mantener el control de la base para el analista y vendedores.
-grant all privileges on sistema_empresarial_ventas.* to 'admin';
-
--- Si da un error como 1034 (HY000): Index for table 'db' is corrupt; try to repair it, ejecutar este comando:
-REPAIR TABLE mysql.db;
+DROP USER IF EXISTS 'usu_admin'@'localhost';
+DROP USER IF EXISTS 'usu_vendedor'@'localhost';
+DROP USER IF EXISTS 'usu_analista'@'localhost';
 
 
--- Rol Vendedor (Operaciones para vendedores) || Solo pueden ver (select) clientes y productos.
--- Solo pueden ingresar nuevas ventas y detalles (insert). Evita alteraciones en otras tablas.
-grant select on sistema_empresarial_ventas.clientes to 'vendedor';
-grant select on sistema_empresarial_ventas.productos to 'vendedor';
-grant insert on sistema_empresarial_ventas.ventas to 'vendedor';
-grant insert on sistema_empresarial_ventas.detalle_ventas to 'vendedor';
+-- 1) Creación de roles
+CREATE ROLE admin;
+CREATE ROLE vendedor;
+CREATE ROLE analista;
 
--- Rol Analista (Solo lectura a traves de vistas) || Se limitan los permisos a SELECT en las vistas.
--- Evita el acceso directo a los datos crudos y su manipulacion.
-grant select on sistema_empresarial_ventas.ventas_por_empleado to 'analista';
-grant select on sistema_empresarial_ventas.vista_ventas_empleado to 'analista';
-grant select on sistema_empresarial_ventas.ventas_por_sucursal to 'analista';
-grant select on sistema_empresarial_ventas.vista_clientes_tipo to 'analista';
 
--- Permisos de ejecucion para las funciones usadas en las vistas
-grant execute on function sistema_empresarial_ventas.ventasXempleado to 'analista';
-grant execute on function sistema_empresarial_ventas.clasificacion_cliente to 'analista';
+-- 2) Asignación de privilegios a roles
 
--- 3. CREACION DE USUARIOS Y ASIGNACION
-create user 'usu_admin'@'localhost' identified by 'admin123';
-create user 'usu_vendedor'@'localhost' identified by 'vende123';
-create user 'usu_analista'@'localhost' identified by 'analis123';
+-- Rol Admin: control total sobre la BD
+GRANT ALL PRIVILEGES ON sistema_empresarial_ventas.* TO admin;
 
--- Asignar los roles a sus respectivos usuarios
-grant 'admin' to 'usu_admin'@'localhost';
-grant 'vendedor' to 'usu_vendedor'@'localhost';
-grant 'analista' to 'usu_analista'@'localhost';
+-- Rol Vendedor: consulta de clientes/productos e inserción de ventas
+GRANT SELECT ON sistema_empresarial_ventas.clientes TO vendedor;
+GRANT SELECT ON sistema_empresarial_ventas.productos TO vendedor;
+GRANT INSERT ON sistema_empresarial_ventas.ventas TO vendedor;
+GRANT INSERT ON sistema_empresarial_ventas.detalle_ventas TO vendedor;
 
--- Activacion automatica del rol al iniciar sesion (Solo para MySQL 8+)
-set default role 'admin' to 'usu_admin'@'localhost';
-set default role 'vendedor' to 'usu_vendedor'@'localhost';
-set default role 'analista' to 'usu_analista'@'localhost';
+-- Rol Analista: solo lectura mediante vistas
+GRANT SELECT ON sistema_empresarial_ventas.ventas_por_empleado TO analista;
+GRANT SELECT ON sistema_empresarial_ventas.vista_ventas_empleado TO analista;
+GRANT SELECT ON sistema_empresarial_ventas.ventas_por_sucursal TO analista;
+GRANT SELECT ON sistema_empresarial_ventas.vista_clientes_tipo TO analista;
 
--- Activacion automatica del rol al iniciar sesion (para MariaDB) 
-SET DEFAULT ROLE 'vendedor' FOR 'usu_vendedor'@'localhost';
-SET DEFAULT ROLE 'admin' FOR 'usu_admin'@'localhost';
-SET DEFAULT ROLE 'analista' FOR 'usu_analista'@'localhost';
+-- Permisos de ejecución para funciones usadas por vistas (si aplica)
+GRANT EXECUTE ON FUNCTION sistema_empresarial_ventas.ventasXempleado TO analista;
+GRANT EXECUTE ON FUNCTION sistema_empresarial_ventas.clasificacion_cliente TO analista;
 
-flush privileges;
 
--- 4. PRUEBAS DE ACCESO PERMITIDO Y DENEGADO (Para probar con los usuarios conectados)
+-- 3) Creación de usuarios
+CREATE USER 'usu_admin'@'localhost' IDENTIFIED BY 'admin123';
+CREATE USER 'usu_vendedor'@'localhost' IDENTIFIED BY 'vende123';
+CREATE USER 'usu_analista'@'localhost' IDENTIFIED BY 'analis123';
 
--- --- PRUEBAS DEL VENDEDOR (usu_vendedor) ---
--- PERMITIDO: Registrar venta y revisar productos/clientes
--- select * from productos;
--- insert into ventas (total, cliente_id, empleado_id, sucursal_id) values (0, 1, 1, 1);
--- DENEGADO: Actualizar un cliente o borrar productos
--- update clientes set nombre = 'Nuevo' where id_cliente = 1; -- (Error: UPDATE command denied)
--- select * from empleados; -- (Error: SELECT command denied)
 
--- --- PRUEBAS DEL ANALISTA (usu_analista) ---
--- PERMITIDO: Consultar vistas
--- select * from ventas_por_sucursal;
--- select * from vista_clientes_tipo;
--- DENEGADO: Consultar tablas directas o hacer INSERT
--- select * from ventas; -- (Error: SELECT command denied)
--- insert into sucursales (nombre, ciudad, direccion, telefono) values ('N','Qro','Av','123'); -- (Error: INSERT command denied)
+-- 4) Asignar roles a usuarios
+GRANT admin TO 'usu_admin'@'localhost';
+GRANT vendedor TO 'usu_vendedor'@'localhost';
+GRANT analista TO 'usu_analista'@'localhost';
 
--- --- PRUEBAS DEL ADMIN (usu_admin) ---
--- PERMITIDO: Control total, puede hacer update, delete, create o drop sin restriccion alguna.
+
+-- 5) Rol por defecto al iniciar sesión (MariaDB)  ✅
+SET DEFAULT ROLE admin FOR 'usu_admin'@'localhost';
+SET DEFAULT ROLE vendedor FOR 'usu_vendedor'@'localhost';
+SET DEFAULT ROLE analista FOR 'usu_analista'@'localhost';
+
+
+-- 6) Aplicar cambios
+FLUSH PRIVILEGES;
+
+
+-- 7) PRUEBAS (ejecuta estas pruebas conectándote con cada usuario)
+-- ------------------------------------------------------------
+-- VENDEDOR (usu_vendedor):
+--   PERMITIDO:
+--     SELECT * FROM sistema_empresarial_ventas.productos;
+--     SELECT * FROM sistema_empresarial_ventas.clientes;
+--     INSERT INTO sistema_empresarial_ventas.ventas (total, cliente_id, empleado_id, sucursal_id)
+--     VALUES (0, 1, 1, 1);
+--   DENEGADO:
+--     UPDATE sistema_empresarial_ventas.clientes SET nombre='Nuevo' WHERE id_cliente=1;
+--     SELECT * FROM sistema_empresarial_ventas.empleados;
+
+-- ANALISTA (usu_analista):
+--   PERMITIDO:
+--     SELECT * FROM sistema_empresarial_ventas.ventas_por_sucursal;
+--     SELECT * FROM sistema_empresarial_ventas.vista_clientes_tipo;
+--   DENEGADO:
+--     SELECT * FROM sistema_empresarial_ventas.ventas;
+--     INSERT INTO sistema_empresarial_ventas.sucursales (nombre, ciudad, direccion, telefono)
+--     VALUES ('N','Qro','Av','123');
+
+-- ADMIN (usu_admin):
+--   PERMITIDO:
+--     Control total.
 -- ------------------------------------------------------------------------------------------------------------------
 
 -- 													INDICES

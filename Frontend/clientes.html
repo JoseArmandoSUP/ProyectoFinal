@@ -4,168 +4,586 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Clientes</title>
+
+  <style>
+    :root{
+      --bg: #0b1220;
+      --card: rgba(255,255,255,.08);
+      --card2: rgba(255,255,255,.06);
+      --border: rgba(255,255,255,.14);
+      --text: #e8eefc;
+      --muted: rgba(232,238,252,.72);
+      --primary: #6ea8fe;
+      --ok: #22c55e;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+      --shadow: 0 18px 50px rgba(0,0,0,.45);
+      --radius: 18px;
+      --radius-sm: 12px;
+    }
+
+    *{ box-sizing: border-box; }
+
+    body{
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(900px 500px at 12% 10%, rgba(110,168,254,.28), transparent 60%),
+        radial-gradient(700px 450px at 90% 20%, rgba(34,197,94,.18), transparent 55%),
+        linear-gradient(180deg, #060a14, var(--bg));
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .app{
+      width: min(1100px, 100%);
+      margin: 0 auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      overflow: hidden;
+    }
+
+    header{
+      padding: 22px 24px 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+    }
+
+    header h1{
+      margin: 0;
+      font-size: clamp(1.2rem, 1rem + 1vw, 1.7rem);
+      letter-spacing: .2px;
+    }
+
+    header .actions{
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .link{
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.18);
+      color: var(--text);
+      text-decoration: none;
+      font-size: .92rem;
+      transition: transform .15s ease, border-color .15s ease, background .15s ease;
+      user-select: none;
+    }
+    .link:hover{
+      transform: translateY(-1px);
+      border-color: rgba(110,168,254,.5);
+      background: rgba(255,255,255,.06);
+    }
+
+    main{
+      padding: 18px 24px 24px 24px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .grid{
+      display: grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 16px;
+      align-items: start;
+    }
+    @media (max-width: 980px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .card{
+      background: var(--card2);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+
+    .card h2{
+      margin: 0 0 10px 0;
+      font-size: 1.05rem;
+      letter-spacing: .2px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .hint{
+      color: var(--muted);
+      font-size: .92rem;
+      margin: 0 0 12px 0;
+      line-height: 1.35;
+    }
+
+    .form{
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 10px;
+    }
+
+    .field{
+      grid-column: span 6;
+      display: grid;
+      gap: 6px;
+    }
+
+    .field.full{ grid-column: span 12; }
+    .field.third{ grid-column: span 4; }
+
+    @media (max-width: 720px){
+      .field, .field.third{ grid-column: span 12; }
+    }
+
+    label{
+      font-size: .88rem;
+      color: var(--muted);
+    }
+
+    input, select{
+      width: 100%;
+      padding: 11px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.22);
+      color: var(--text);
+      outline: none;
+      transition: border-color .15s ease, box-shadow .15s ease, transform .05s ease;
+    }
+
+    input::placeholder{ color: rgba(232,238,252,.45); }
+
+    input:focus, select:focus{
+      border-color: rgba(110,168,254,.65);
+      box-shadow: 0 0 0 4px rgba(110,168,254,.18);
+    }
+
+    .btn-row{
+      grid-column: span 12;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+
+    button{
+      border: 0;
+      padding: 11px 14px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(110,168,254,.95), rgba(110,168,254,.55));
+      color: #061025;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .12s ease, filter .12s ease;
+    }
+    button:hover{ transform: translateY(-1px); filter: brightness(1.02); }
+    button:active{ transform: translateY(0px); }
+
+    .btn-secondary{
+      background: rgba(255,255,255,.10);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,.14);
+      font-weight: 600;
+    }
+    .btn-secondary:hover{
+      border-color: rgba(110,168,254,.45);
+    }
+
+    .badge{
+      font-size: .82rem;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.18);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .list{
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 10px;
+    }
+
+    .item{
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      display: grid;
+      gap: 6px;
+    }
+
+    .item .top{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .item .title{
+      font-weight: 700;
+      letter-spacing: .2px;
+      font-size: .95rem;
+    }
+
+    .item .meta{
+      color: var(--muted);
+      font-size: .88rem;
+    }
+
+    .section-actions{
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin: 8px 0 10px 0;
+    }
+
+    .small-note{
+      color: var(--muted);
+      font-size: .88rem;
+      margin: 0;
+    }
+
+    .toast{
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,.65);
+      border: 1px solid rgba(255,255,255,.14);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 999px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      display: none;
+      max-width: min(560px, calc(100% - 36px));
+      text-align: center;
+      font-size: .92rem;
+    }
+  </style>
 </head>
+
 <body>
+  <div class="app">
+    <header>
+      <h1>Clientes</h1>
+      <div class="actions">
+        <a class="link" href="index.html">← Menú</a>
+        <span class="badge" title="API base">API: http://localhost:4000/api/clientes</span>
+      </div>
+    </header>
 
-  <h1>Agregar Cliente</h1>
+    <main>
+      <div class="grid">
+        <!-- FORM -->
+        <section class="card">
+          <h2>Agregar cliente <span class="badge">POST</span></h2>
+          <p class="hint">Completa los datos y presiona <b>Guardar</b>. Al finalizar se actualizará el listado.</p>
 
-  <input id="nombre" placeholder="Nombre(s)">
-  <input id="apellido_p" placeholder="Apellido Paterno">
-  <input id="apellido_m" placeholder="Apellido Materno">
-  <input id="telefono" placeholder="Teléfono">
-  <input id="email" placeholder="Correo Electrónico">
-  <input id="calle" placeholder="Calle">
-  <input id="cp" placeholder="Código Postal (cp)">
+          <div class="form">
+            <div class="field">
+              <label for="nombre">Nombre(s)</label>
+              <input id="nombre" placeholder="Nombre(s)" autocomplete="given-name">
+            </div>
 
-  <!-- Mejor usar select para evitar valores inválidos -->
-  <select id="tipo_cliente">
-    <option value="">Selecciona tipo_cliente</option>
-    <option value="nuevo">nuevo</option>
-    <option value="casual">casual</option>
-    <option value="frecuente">frecuente</option>
-  </select>
+            <div class="field">
+              <label for="telefono">Teléfono</label>
+              <input id="telefono" placeholder="Teléfono" autocomplete="tel">
+            </div>
 
-  <!-- type="date" ya manda YYYY-MM-DD -->
-  <input id="fecha_registro" type="date" placeholder="Fecha de Registro">
+            <div class="field">
+              <label for="apellido_p">Apellido paterno</label>
+              <input id="apellido_p" placeholder="Apellido Paterno" autocomplete="family-name">
+            </div>
 
-  <button onclick="agregarCliente()">Guardar</button>
+            <div class="field">
+              <label for="apellido_m">Apellido materno</label>
+              <input id="apellido_m" placeholder="Apellido Materno">
+            </div>
 
-  <hr>
+            <div class="field">
+              <label for="email">Correo electrónico</label>
+              <input id="email" placeholder="Correo Electrónico" autocomplete="email">
+            </div>
 
-  <h2>Listado de clientes (GET /api/clientes)</h2>
-  <ul id="lista"></ul>
+            <div class="field">
+              <label for="calle">Calle</label>
+              <input id="calle" placeholder="Calle" autocomplete="street-address">
+            </div>
 
-  <hr>
+            <div class="field third">
+              <label for="cp">Código Postal</label>
+              <input id="cp" placeholder="Código Postal (cp)" inputmode="numeric" autocomplete="postal-code">
+            </div>
 
-  <h2>Clientes con clasificación (GET /api/clientes/clasificacion)</h2>
-  <button onclick="obtenerClientesClasificacion()">Ver clasificación</button>
-  <ul id="listaClasificacion"></ul>
+            <div class="field third">
+              <label for="tipo_cliente">Tipo de cliente</label>
+              <select id="tipo_cliente">
+                <option value="">Selecciona tipo_cliente</option>
+                <option value="nuevo">nuevo</option>
+                <option value="casual">casual</option>
+                <option value="frecuente">frecuente</option>
+              </select>
+            </div>
 
-  <hr>
+            <div class="field third">
+              <label for="fecha_registro">Fecha de registro</label>
+              <input id="fecha_registro" type="date" placeholder="Fecha de Registro">
+            </div>
 
-  <h2>Clientes con compras superiores al promedio (GET /api/clientes/compras/superiores-promedio)</h2>
-  <button onclick="obtenerClientesSuperiorPromedio()">Ver</button>
-  <ul id="listaSuperiorPromedio"></ul>
+            <div class="btn-row">
+              <button onclick="agregarCliente()" type="button">Guardar</button>
+              <button class="btn-secondary" onclick="limpiarFormulario()" type="button">Limpiar</button>
+              <button class="btn-secondary" onclick="obtenerClientes()" type="button">Actualizar listado</button>
+            </div>
 
-  <hr>
+            <p class="small-note">Tip: si tu API ahora pide token y te da 401, primero haz login.</p>
+          </div>
+        </section>
 
-  <h2>Historial por cliente (GET /api/clientes/:id_cliente/historial)</h2>
-  <input id="historial_id_cliente" type="number" min="1" placeholder="id_cliente (ej. 1)">
-  <button onclick="obtenerHistorial()">Ver historial</button>
-  <ul id="listaHistorial"></ul>
+        <!-- LISTADO -->
+        <section class="card">
+          <h2>Listado de clientes <span class="badge">GET</span></h2>
+          <p class="hint">Se carga automáticamente al abrir la página.</p>
+          <ul id="lista" class="list"></ul>
+        </section>
+      </div>
+
+      <section class="card">
+        <h2>Clientes con clasificación <span class="badge">GET /clasificacion</span></h2>
+        <div class="section-actions">
+          <button class="btn-secondary" onclick="obtenerClientesClasificacion()" type="button">Ver clasificación</button>
+        </div>
+        <ul id="listaClasificacion" class="list"></ul>
+      </section>
+
+      <section class="card">
+        <h2>Compras superiores al promedio <span class="badge">GET /compras/superiores-promedio</span></h2>
+        <div class="section-actions">
+          <button class="btn-secondary" onclick="obtenerClientesSuperiorPromedio()" type="button">Ver</button>
+        </div>
+        <ul id="listaSuperiorPromedio" class="list"></ul>
+      </section>
+
+      <section class="card">
+        <h2>Historial por cliente <span class="badge">GET /:id_cliente/historial</span></h2>
+
+        <div class="section-actions">
+          <div class="field" style="min-width: min(380px, 100%); margin: 0;">
+            <label for="historial_id_cliente">id_cliente</label>
+            <input id="historial_id_cliente" type="number" min="1" placeholder="id_cliente (ej. 1)">
+          </div>
+          <button class="btn-secondary" onclick="obtenerHistorial()" type="button">Ver historial</button>
+        </div>
+
+        <ul id="listaHistorial" class="list"></ul>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast"></div>
 
   <script>
-    const API = 'http://localhost:4000/api/clientes';
+    // ----------------------- AUTH HELPER (NUEVO) -----------------------
+    const API_BASE = 'http://localhost:4000/api';
+    const token = localStorage.getItem('token');
+    if (!token) location.href = 'login.html';
 
-    function agregarCliente() {
-      // Validación rápida en front (opcional)
-      const payload = {
-        nombre: document.getElementById('nombre').value,
-        apellido_p: document.getElementById('apellido_p').value,
-        apellido_m: document.getElementById('apellido_m').value,
-        telefono: document.getElementById('telefono').value,
-        email: document.getElementById('email').value,
-        calle: document.getElementById('calle').value,
-        cp: document.getElementById('cp').value,
-        tipo_cliente: document.getElementById('tipo_cliente').value, // ya va en minúsculas
-        fecha_registro: document.getElementById('fecha_registro').value // YYYY-MM-DD
-      };
+    async function apiFetch(path, options = {}) {
+      const headers = { ...(options.headers || {}), Authorization: `Bearer ${token}` };
+      if (options.body && !headers['Content-Type']) headers['Content-Type'] = 'application/json';
 
-      fetch(API, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
-      .then(async (res) => {
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.msg || 'Error al agregar cliente');
-        return data;
-      })
-      .then(data => {
-        alert(data.msg || 'Cliente agregado');
+      const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) throw new Error(data.msg || data.error || `HTTP ${res.status}`);
+      return data;
+    }
+
+    // ----------------------- UI -----------------------
+    function toast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.display = 'block';
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => t.style.display = 'none', 2600);
+    }
+
+    function limpiarFormulario(){
+      ['nombre','apellido_p','apellido_m','telefono','email','calle','cp','tipo_cliente','fecha_registro']
+        .forEach(id => document.getElementById(id).value = '');
+      toast('Formulario limpio');
+    }
+
+    async function agregarCliente() {
+      try {
+        const payload = {
+          nombre: document.getElementById('nombre').value,
+          apellido_p: document.getElementById('apellido_p').value,
+          apellido_m: document.getElementById('apellido_m').value,
+          telefono: document.getElementById('telefono').value,
+          email: document.getElementById('email').value,
+          calle: document.getElementById('calle').value,
+          cp: document.getElementById('cp').value,
+          tipo_cliente: document.getElementById('tipo_cliente').value,
+          fecha_registro: document.getElementById('fecha_registro').value
+        };
+
+        const data = await apiFetch('/clientes', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+
+        toast(data.msg || 'Cliente agregado');
         obtenerClientes();
-      })
-      .catch(error => alert(error.message));
+      } catch (error) {
+        toast(error.message);
+      }
     }
 
-    function obtenerClientes() {
-      fetch(API)
-        .then(res => res.json())
-        .then(data => {
-          const lista = document.getElementById('lista');
-          lista.innerHTML = '';
-          if (data.exito && data.datos) {
-            data.datos.forEach(c => {
-              lista.innerHTML += `<li>[${c.id_cliente}] ${c.nombre} ${c.apellido_p} ${c.apellido_m} - ${c.email}</li>`;
-            });
-          } else {
-            lista.innerHTML = '<li>No hay registros</li>';
-          }
-        })
-        .catch(error => console.error('Error:', error));
+    async function obtenerClientes() {
+      try {
+        const data = await apiFetch('/clientes');
+
+        const lista = document.getElementById('lista');
+        lista.innerHTML = '';
+
+        if (data.exito && data.datos && data.datos.length) {
+          data.datos.forEach(c => {
+            const li = document.createElement('li');
+            li.className = 'item';
+            li.innerHTML = `
+              <div class="top">
+                <div class="title">[${c.id_cliente}] ${c.nombre} ${c.apellido_p ?? ''} ${c.apellido_m ?? ''}</div>
+                <span class="badge">${(c.tipo_cliente || 'sin tipo').toString()}</span>
+              </div>
+              <div class="meta">${c.email ? `Email: ${c.email}` : 'Email: N/A'} · ${c.telefono ? `Tel: ${c.telefono}` : 'Tel: N/A'}</div>
+            `;
+            lista.appendChild(li);
+          });
+        } else {
+          lista.innerHTML = `<li class="item"><div class="meta">No hay registros</div></li>`;
+        }
+      } catch (err) {
+        toast(err.message);
+      }
     }
 
-    function obtenerClientesClasificacion() {
-      fetch(`${API}/clasificacion`)
-        .then(res => res.json())
-        .then(data => {
-          const lista = document.getElementById('listaClasificacion');
-          lista.innerHTML = '';
-          if (data.exito && data.datos) {
-            data.datos.forEach(c => {
-              lista.innerHTML += `<li>[${c.id_cliente}] ${c.nombre} → ${c.tipo_cliente}</li>`;
-            });
-          } else {
-            lista.innerHTML = '<li>No hay datos</li>';
-          }
-        })
-        .catch(error => console.error('Error:', error));
+    async function obtenerClientesClasificacion() {
+      try {
+        const data = await apiFetch('/clientes/clasificacion');
+
+        const lista = document.getElementById('listaClasificacion');
+        lista.innerHTML = '';
+
+        if (data.exito && data.datos && data.datos.length) {
+          data.datos.forEach(c => {
+            const li = document.createElement('li');
+            li.className = 'item';
+            li.innerHTML = `
+              <div class="top">
+                <div class="title">[${c.id_cliente}] ${c.nombre}</div>
+                <span class="badge">${c.tipo_cliente}</span>
+              </div>
+              <div class="meta">Clasificación calculada</div>
+            `;
+            lista.appendChild(li);
+          });
+        } else {
+          lista.innerHTML = `<li class="item"><div class="meta">No hay datos</div></li>`;
+        }
+      } catch (err) {
+        toast(err.message);
+      }
     }
 
-    function obtenerClientesSuperiorPromedio() {
-      fetch(`${API}/compras/superiores-promedio`)
-        .then(res => res.json())
-        .then(data => {
-          const lista = document.getElementById('listaSuperiorPromedio');
-          lista.innerHTML = '';
-          if (data.exito && data.datos) {
-            data.datos.forEach(c => {
-              lista.innerHTML += `<li>[${c.id_cliente}] ${c.nombre} → compras: $${Number(c.compras_hechas).toFixed(2)}</li>`;
-            });
-          } else {
-            lista.innerHTML = '<li>No hay datos</li>';
-          }
-        })
-        .catch(error => console.error('Error:', error));
+    async function obtenerClientesSuperiorPromedio() {
+      try {
+        const data = await apiFetch('/clientes/compras/superiores-promedio');
+
+        const lista = document.getElementById('listaSuperiorPromedio');
+        lista.innerHTML = '';
+
+        if (data.exito && data.datos && data.datos.length) {
+          data.datos.forEach(c => {
+            const li = document.createElement('li');
+            li.className = 'item';
+            li.innerHTML = `
+              <div class="top">
+                <div class="title">[${c.id_cliente}] ${c.nombre}</div>
+                <span class="badge">+$${Number(c.compras_hechas).toFixed(2)}</span>
+              </div>
+              <div class="meta">Compras superiores al promedio</div>
+            `;
+            lista.appendChild(li);
+          });
+        } else {
+          lista.innerHTML = `<li class="item"><div class="meta">No hay datos</div></li>`;
+        }
+      } catch (err) {
+        toast(err.message);
+      }
     }
 
-    function obtenerHistorial() {
+    async function obtenerHistorial() {
       const id = document.getElementById('historial_id_cliente').value;
-      if (!id) return alert('Ingresa un id_cliente');
+      if (!id) return toast('Ingresa un id_cliente');
 
-      fetch(`${API}/${id}/historial`)
-        .then(res => res.json())
-        .then(data => {
-          const lista = document.getElementById('listaHistorial');
-          lista.innerHTML = '';
-          if (data.exito && data.datos) {
-            if (data.datos.length === 0) {
-              lista.innerHTML = '<li>Sin ventas para este cliente</li>';
-              return;
-            }
-            data.datos.forEach(v => {
-              lista.innerHTML += `<li>Venta #${v.id_venta} | Fecha: ${v.fecha} | Total: $${Number(v.total).toFixed(2)}</li>`;
-            });
-          } else {
-            lista.innerHTML = '<li>No hay datos</li>';
+      try {
+        const data = await apiFetch(`/clientes/${id}/historial`);
+
+        const lista = document.getElementById('listaHistorial');
+        lista.innerHTML = '';
+
+        if (data.exito && data.datos) {
+          if (data.datos.length === 0) {
+            lista.innerHTML = `<li class="item"><div class="meta">Sin ventas para este cliente</div></li>`;
+            return;
           }
-        })
-        .catch(error => console.error('Error:', error));
+          data.datos.forEach(v => {
+            const li = document.createElement('li');
+            li.className = 'item';
+            li.innerHTML = `
+              <div class="top">
+                <div class="title">Venta #${v.id_venta}</div>
+                <span class="badge">$${Number(v.total).toFixed(2)}</span>
+              </div>
+              <div class="meta">Fecha: ${v.fecha}</div>
+            `;
+            lista.appendChild(li);
+          });
+        } else {
+          lista.innerHTML = `<li class="item"><div class="meta">No hay datos</div></li>`;
+        }
+      } catch (err) {
+        toast(err.message);
+      }
     }
 
     // Carga inicial
     obtenerClientes();
   </script>
-
 </body>
 </html>

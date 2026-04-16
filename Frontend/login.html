@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Login BD</title>
+</head>
+<body>
+  <h2>Login (usuario de BD)</h2>
+
+  <input id="username" placeholder="usu_admin | usu_vendedor | usu_analista">
+  <input id="password" type="password" placeholder="password">
+  <button onclick="login()">Entrar</button>
+
+  <pre id="out"></pre>
+
+  <script>
+    async function login(){
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+
+      const res = await fetch('http://localhost:4000/api/auth/login', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ username, password })
+      });
+
+      const data = await res.json();
+      document.getElementById('out').textContent = JSON.stringify(data, null, 2);
+
+      if(res.ok && data.exito){
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('role', data.role);
+        localStorage.setItem('username', username);
+        location.href = 'index.html';
+      }
+    }
+  </script>
+</body>
+</html>

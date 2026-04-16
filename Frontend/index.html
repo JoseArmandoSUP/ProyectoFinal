@@ -1,21 +1,347 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema empresarial de ventas y control de acceso</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema empresarial de ventas y control de acceso</title>
+
+  <style>
+    :root{
+      --bg: #0b1220;
+      --card: rgba(255,255,255,.08);
+      --card-border: rgba(255,255,255,.14);
+      --text: #e8eefc;
+      --muted: rgba(232,238,252,.72);
+      --primary: #6ea8fe;
+      --primary-2: #22c55e;
+      --shadow: 0 18px 50px rgba(0,0,0,.45);
+      --radius: 18px;
+    }
+
+    *{ box-sizing: border-box; }
+    body{
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(900px 500px at 10% 10%, rgba(110,168,254,.35), transparent 60%),
+        radial-gradient(700px 450px at 90% 25%, rgba(34,197,94,.25), transparent 55%),
+        radial-gradient(600px 400px at 50% 90%, rgba(168,85,247,.20), transparent 60%),
+        linear-gradient(180deg, #060a14, var(--bg));
+      padding: 24px;
+    }
+
+    .app{
+      width: min(980px, 100%);
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      overflow: hidden;
+    }
+
+    header{
+      padding: 28px 28px 18px 28px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .title-wrap{ display: grid; gap: 6px; }
+
+    h1{
+      margin: 0;
+      font-size: clamp(1.25rem, 1rem + 1.2vw, 1.9rem);
+      letter-spacing: .2px;
+    }
+    .subtitle{
+      margin: 0;
+      color: var(--muted);
+      font-size: .95rem;
+    }
+
+    .badge{
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.18);
+      color: var(--muted);
+      font-size: .9rem;
+      user-select: none;
+    }
+    .dot{
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--primary-2);
+      box-shadow: 0 0 0 4px rgba(34,197,94,.15);
+    }
+
+    main{ padding: 22px 28px 28px 28px; }
+
+    .grid{
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 14px;
+    }
+
+    .grid li{ grid-column: span 6; }
+
+    @media (max-width: 720px){
+      .grid li{ grid-column: span 12; }
+    }
+
+    a.card{
+      text-decoration: none;
+      color: var(--text);
+      display: block;
+      padding: 16px 16px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      transition: transform .15s ease, background .15s ease, border-color .15s ease;
+      min-height: 78px;
+    }
+
+    a.card:hover{
+      transform: translateY(-2px);
+      background: rgba(255,255,255,.09);
+      border-color: rgba(110,168,254,.45);
+    }
+
+    a.card:focus-visible{
+      outline: 3px solid rgba(110,168,254,.55);
+      outline-offset: 3px;
+    }
+
+    .card-top{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .card h2{
+      margin: 0;
+      font-size: 1.02rem;
+      letter-spacing: .2px;
+    }
+
+    .card p{
+      margin: 8px 0 0 0;
+      color: var(--muted);
+      font-size: .92rem;
+      line-height: 1.35;
+    }
+
+    .pill{
+      font-size: .82rem;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.18);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    a.card.disabled,
+    a.card[aria-disabled="true"]{
+      opacity: .55;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .btn-logout{
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.18);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: .9rem;
+    }
+    .btn-logout:hover{
+      border-color: rgba(110,168,254,.5);
+      background: rgba(255,255,255,.06);
+    }
+
+    /* NUEVO: aviso si no hay sesión */
+    .notice{
+      margin: 12px 28px 0 28px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      color: var(--muted);
+      display: none;
+    }
+
+    footer{
+      padding: 14px 28px 18px 28px;
+      border-top: 1px solid rgba(255,255,255,.10);
+      color: var(--muted);
+      font-size: .9rem;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+  </style>
 </head>
+
 <body>
-    
-    <h1>Sistema empresarial de ventas y control de acceso</h1>
+  <div class="app">
+    <header>
+      <div class="title-wrap">
+        <h1>Sistema empresarial de ventas y control de acceso</h1>
+        <p class="subtitle">Selecciona un módulo para continuar</p>
+      </div>
 
-    <ul>
-        <li><a href="clientes.html">Clientes</a></li>
-        <li><a href="productos.html">Productos</a></li>
-        <li><a href="">Empledos</a></li>
-        <li><a href="ventas.html">Ventas</a></li>
-        <li><a href="">Reportes</a></li>
-    </ul>
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <div class="badge" title="Sesión actual">
+          <span class="dot" aria-hidden="true"></span>
+          <span id="sessionText">Cargando sesión...</span>
+        </div>
+        <button class="btn-logout" type="button" onclick="logout()">Cerrar sesión</button>
+      </div>
+    </header>
 
+    <div id="notice" class="notice"></div>
+
+    <main>
+      <ul class="grid">
+        <li>
+          <a class="card" id="card-clientes" href="clientes.html">
+            <div class="card-top">
+              <h2>Clientes</h2>
+              <span class="pill">Consulta</span>
+            </div>
+            <p>Gestión y visualización de clientes.</p>
+          </a>
+        </li>
+
+        <li>
+          <a class="card" id="card-productos" href="productos.html">
+            <div class="card-top">
+              <h2>Productos</h2>
+              <span class="pill">Catálogo</span>
+            </div>
+            <p>Revisa existencias y lista de productos.</p>
+          </a>
+        </li>
+
+        <li>
+          <a class="card" id="card-empleados" href="empleados.html">
+            <div class="card-top">
+              <h2>Empleados</h2>
+              <span class="pill">Gestión</span>
+            </div>
+            <p>Altas, bajas, cambios y reportes.</p>
+          </a>
+        </li>
+
+        <li>
+          <a class="card" id="card-sucursales" href="sucursales.html">
+            <div class="card-top">
+              <h2>Sucursales</h2>
+              <span class="pill">Gestión</span>
+            </div>
+            <p>Consulta, altas y reportes por sucursal.</p>
+          </a>
+        </li>
+
+        <li>
+          <a class="card" id="card-ventas" href="ventas.html">
+            <div class="card-top">
+              <h2>Ventas</h2>
+              <span class="pill">Operación</span>
+            </div>
+            <p>Registrar ventas y ver historial.</p>
+          </a>
+        </li>
+
+        <li>
+          <a class="card disabled" id="card-reportes" href="#" aria-disabled="true">
+            <div class="card-top">
+              <h2>Reportes</h2>
+              <span class="pill">Próximamente</span>
+            </div>
+            <p>Indicadores y reportes por sucursal/empleado.</p>
+          </a>
+        </li>
+      </ul>
+    </main>
+
+    <footer>
+      <span>© 2026 · Sistema empresarial</span>
+      <span>UI básica (HTML + CSS)</span>
+    </footer>
+  </div>
+
+  <script>
+    // MODIFICADO:
+    // - Si no hay token, NO redirige en bucle: muestra aviso y manda a login.
+    // - Si hay token, muestra sesión.
+    // - Ajusta UI por rol.
+    // Nota: esto solo controla la UI; la seguridad real debe estar en backend.
+    (function initSession(){
+      const token = localStorage.getItem('token');
+      const role = localStorage.getItem('role');
+      const username = localStorage.getItem('username');
+
+      const sessionText = document.getElementById('sessionText');
+      const notice = document.getElementById('notice');
+
+      if (!token) {
+        if (sessionText) sessionText.textContent = 'Sin sesión';
+        if (notice) {
+          notice.style.display = 'block';
+          notice.textContent = 'No hay sesión activa. Redirigiendo a login...';
+        }
+        setTimeout(() => { location.href = 'login.html'; }, 700);
+        return;
+      }
+
+      // Mostrar quién está logueado
+      const u = username ? username : 'usuario';
+      const r = role ? role : 'sin-rol';
+      if (sessionText) sessionText.textContent = `Sesión: ${u} (${r})`;
+
+      // Control UI por rol
+      if (role === 'vendedor') {
+        const empleados = document.getElementById('card-empleados');
+        const sucursales = document.getElementById('card-sucursales');
+        if (empleados) empleados.style.display = 'none';
+        if (sucursales) sucursales.style.display = 'none';
+      }
+
+      // Si quieres forzar restricciones visuales para analista, descomenta:
+      // if (role === 'analista') {
+      //   const ventas = document.getElementById('card-ventas');
+      //   if (ventas) ventas.style.display = 'none';
+      // }
+    })();
+
+    function logout() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('role');
+      localStorage.removeItem('username');
+      location.href = 'login.html';
+    }
+  </script>
 </body>
 </html>

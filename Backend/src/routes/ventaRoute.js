@@ -2,12 +2,18 @@ const express = require('express');
 const router = express.Router();
 const ventaController = require('../controllers/ventaController');
 
+const { requireAuth } = require('../middlewares/auth');
+const { withDbRole } = require('../middlewares/withDbRole');
 
-router.get('/clientes/compras/superiores-promedio', ventaController.clientesComprasSuperioresPromedio);
-router.get('/clientes/clasificacion', ventaController.obtenerClientesConClasificacion);
-router.get('/clientes/:id_cliente/historial', ventaController.obtenerHistorialCliente);
+// Clientes (relacionado a ventas)
+router.get('/clientes/compras/superiores-promedio', requireAuth, withDbRole, ventaController.clientesComprasSuperioresPromedio);
+router.get('/clientes/clasificacion', requireAuth, withDbRole, ventaController.obtenerClientesConClasificacion);
+router.get('/clientes/:id_cliente/historial', requireAuth, withDbRole, ventaController.obtenerHistorialCliente);
 
+// Reportes
+router.get('/reportes/ventas-total-calculado', requireAuth, withDbRole, ventaController.ventasTotalCalculado);
 
-router.post('/', ventaController.registrarVenta);
+// Registrar venta
+router.post('/', requireAuth, withDbRole, ventaController.registrarVenta);
 
 module.exports = router;

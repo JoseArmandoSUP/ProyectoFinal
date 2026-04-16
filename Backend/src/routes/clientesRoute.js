@@ -1,14 +1,17 @@
 const express = require('express');
 const router = express.Router();
-const clientesCrontoller = require('../controllers/clientesController');
+const clientesController = require('../controllers/clientesController');
 
+const { requireAuth } = require('../middlewares/auth');
+const { withDbRole } = require('../middlewares/withDbRole');
 
-router.get('/compras/superiores-promedio', clientesCrontoller.clientesComprasSuperioresPromedio);
-router.get('/clasificacion', clientesCrontoller.obtenerClientesConClasificacion);
-router.get('/:id_cliente/historial', clientesCrontoller.obtenerHistorialCliente);
+// Importante: primero rutas específicas
+router.get('/compras/superiores-promedio', requireAuth, withDbRole, clientesController.clientesComprasSuperioresPromedio);
+router.get('/clasificacion', requireAuth, withDbRole, clientesController.obtenerClientesConClasificacion);
+router.get('/:id_cliente/historial', requireAuth, withDbRole, clientesController.obtenerHistorialCliente);
 
-// Rutas que ya tenías
-router.get('/', clientesCrontoller.obtenerClientes);
-router.post('/', clientesCrontoller.agregarCliente);
+// CRUD
+router.get('/', requireAuth, withDbRole, clientesController.obtenerClientes);
+router.post('/', requireAuth, withDbRole, clientesController.agregarCliente);
 
 module.exports = router;

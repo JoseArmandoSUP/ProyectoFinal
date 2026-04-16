@@ -4,133 +4,502 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Productos</title>
+
+  <style>
+    :root{
+      --bg: #0b1220;
+      --card: rgba(255,255,255,.08);
+      --card2: rgba(255,255,255,.06);
+      --border: rgba(255,255,255,.14);
+      --text: #e8eefc;
+      --muted: rgba(232,238,252,.72);
+      --primary: #6ea8fe;
+      --ok: #22c55e;
+      --shadow: 0 18px 50px rgba(0,0,0,.45);
+      --radius: 18px;
+    }
+
+    *{ box-sizing: border-box; }
+
+    body{
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(900px 500px at 12% 10%, rgba(110,168,254,.28), transparent 60%),
+        radial-gradient(700px 450px at 90% 20%, rgba(34,197,94,.16), transparent 55%),
+        linear-gradient(180deg, #060a14, var(--bg));
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .app{
+      width: min(1100px, 100%);
+      margin: 0 auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      overflow: hidden;
+    }
+
+    header{
+      padding: 22px 24px 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+    }
+
+    header h1{
+      margin: 0;
+      font-size: clamp(1.2rem, 1rem + 1vw, 1.7rem);
+      letter-spacing: .2px;
+    }
+
+    header .actions{
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .link{
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.18);
+      color: var(--text);
+      text-decoration: none;
+      font-size: .92rem;
+      transition: transform .15s ease, border-color .15s ease, background .15s ease;
+      user-select: none;
+    }
+    .link:hover{
+      transform: translateY(-1px);
+      border-color: rgba(110,168,254,.5);
+      background: rgba(255,255,255,.06);
+    }
+
+    main{
+      padding: 18px 24px 24px 24px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .grid{
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 16px;
+      align-items: start;
+    }
+    @media (max-width: 980px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .card{
+      background: var(--card2);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+
+    .card h2{
+      margin: 0 0 10px 0;
+      font-size: 1.05rem;
+      letter-spacing: .2px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .hint{
+      color: var(--muted);
+      font-size: .92rem;
+      margin: 0 0 12px 0;
+      line-height: 1.35;
+    }
+
+    .form{
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 10px;
+    }
+
+    .field{
+      grid-column: span 6;
+      display: grid;
+      gap: 6px;
+    }
+    .field.full{ grid-column: span 12; }
+    .field.third{ grid-column: span 4; }
+
+    @media (max-width: 720px){
+      .field, .field.third{ grid-column: span 12; }
+    }
+
+    label{
+      font-size: .88rem;
+      color: var(--muted);
+    }
+
+    input{
+      width: 100%;
+      padding: 11px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.22);
+      color: var(--text);
+      outline: none;
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    input::placeholder{ color: rgba(232,238,252,.45); }
+    input:focus{
+      border-color: rgba(110,168,254,.65);
+      box-shadow: 0 0 0 4px rgba(110,168,254,.18);
+    }
+
+    .btn-row{
+      grid-column: span 12;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+
+    button{
+      border: 0;
+      padding: 11px 14px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(110,168,254,.95), rgba(110,168,254,.55));
+      color: #061025;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .12s ease, filter .12s ease;
+    }
+    button:hover{ transform: translateY(-1px); filter: brightness(1.02); }
+    button:active{ transform: translateY(0px); }
+
+    .btn-secondary{
+      background: rgba(255,255,255,.10);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,.14);
+      font-weight: 600;
+    }
+    .btn-secondary:hover{
+      border-color: rgba(110,168,254,.45);
+    }
+
+    .badge{
+      font-size: .82rem;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.18);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .list{
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 10px;
+    }
+
+    .item{
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      display: grid;
+      gap: 6px;
+    }
+
+    .item .top{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .item .title{
+      font-weight: 700;
+      letter-spacing: .2px;
+      font-size: .95rem;
+    }
+
+    .item .meta{
+      color: var(--muted);
+      font-size: .88rem;
+    }
+
+    .section-actions{
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin: 8px 0 10px 0;
+    }
+
+    .toast{
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,.65);
+      border: 1px solid rgba(255,255,255,.14);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 999px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      display: none;
+      max-width: min(560px, calc(100% - 36px));
+      text-align: center;
+      font-size: .92rem;
+    }
+  </style>
 </head>
+
 <body>
+  <div class="app">
+    <header>
+      <h1>Productos</h1>
+      <div class="actions">
+        <a class="link" href="index.html">← Menú</a>
+        <span class="badge" title="API base">API: http://localhost:4000/api/productos</span>
+      </div>
+    </header>
 
-  <h1>Agregar Productos</h1>
+    <main>
+      <div class="grid">
+        <!-- FORM -->
+        <section class="card">
+          <h2>Agregar producto <span class="badge">POST</span></h2>
+          <p class="hint">Registra un producto y actualiza el listado automáticamente.</p>
 
-  <input id="nombre" placeholder="Nombre del Producto">
-  <input id="descripcion" placeholder="Descripción">
+          <div class="form">
+            <div class="field">
+              <label for="nombre">Nombre del producto</label>
+              <input id="nombre" placeholder="Nombre del Producto" autocomplete="off">
+            </div>
 
-  <!-- números -->
-  <input id="precio" type="number" step="0.01" min="0" placeholder="Precio ($00.00)">
-  <input id="stock" type="number" step="1" min="0" placeholder="Cantidad Disponible">
-  <input id="stock_minimo" type="number" step="1" min="0" placeholder="Cantidad Disponible Mínima">
+            <div class="field">
+              <label for="descripcion">Descripción</label>
+              <input id="descripcion" placeholder="Descripción" autocomplete="off">
+            </div>
 
-  <button onclick="agregarProductos()">Guardar</button>
+            <div class="field third">
+              <label for="precio">Precio</label>
+              <input id="precio" type="number" step="0.01" min="0" placeholder="Precio ($00.00)" inputmode="decimal">
+            </div>
 
-  <hr>
+            <div class="field third">
+              <label for="stock">Stock</label>
+              <input id="stock" type="number" step="1" min="0" placeholder="Cantidad Disponible" inputmode="numeric">
+            </div>
 
-  <h2>Listado de productos (GET /api/productos)</h2>
-  <ul id="lista"></ul>
+            <div class="field third">
+              <label for="stock_minimo">Stock mínimo</label>
+              <input id="stock_minimo" type="number" step="1" min="0" placeholder="Cantidad Disponible Mínima" inputmode="numeric">
+            </div>
 
-  <hr>
+            <div class="btn-row">
+              <button onclick="agregarProductos()" type="button">Guardar</button>
+              <button class="btn-secondary" onclick="limpiarFormulario()" type="button">Limpiar</button>
+              <button class="btn-secondary" onclick="obtenerProductos()" type="button">Actualizar listado</button>
+            </div>
+          </div>
+        </section>
 
-  <h2>Productos con stock bajo (GET /api/productos/stock-bajo)</h2>
-  <button onclick="obtenerStockBajo()">Ver stock bajo</button>
-  <ul id="listaStockBajo"></ul>
+        <!-- LISTADO -->
+        <section class="card">
+          <h2>Listado de productos <span class="badge">GET</span></h2>
+          <p class="hint">Se carga automáticamente al abrir la página.</p>
+          <ul id="lista" class="list"></ul>
+        </section>
+      </div>
 
-  <hr>
+      <section class="card">
+        <h2>Stock bajo <span class="badge">GET /stock-bajo</span></h2>
+        <div class="section-actions">
+          <button class="btn-secondary" onclick="obtenerStockBajo()" type="button">Ver stock bajo</button>
+        </div>
+        <ul id="listaStockBajo" class="list"></ul>
+      </section>
 
-  <h2>Productos más vendidos (GET /api/productos/mas-vendidos)</h2>
-  <button onclick="obtenerMasVendidos()">Ver más vendidos</button>
-  <ul id="listaMasVendidos"></ul>
+      <section class="card">
+        <h2>Más vendidos <span class="badge">GET /mas-vendidos</span></h2>
+        <div class="section-actions">
+          <button class="btn-secondary" onclick="obtenerMasVendidos()" type="button">Ver más vendidos</button>
+        </div>
+        <ul id="listaMasVendidos" class="list"></ul>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast"></div>
 
   <script>
-    const API = 'http://localhost:4000/api/productos';
+    // ----------------------- AUTH HELPER (NUEVO) -----------------------
+    const API_BASE = 'http://localhost:4000/api';
+    const token = localStorage.getItem('token');
+    if (!token) location.href = 'login.html';
 
-    function agregarProductos() {
+    async function apiFetch(path, options = {}) {
+      const headers = { ...(options.headers || {}), Authorization: `Bearer ${token}` };
+      if (options.body && !headers['Content-Type']) headers['Content-Type'] = 'application/json';
+
+      const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.msg || data.error || `HTTP ${res.status}`);
+      return data;
+    }
+
+    // ----------------------- UI -----------------------
+    function toast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.display = 'block';
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => t.style.display = 'none', 2600);
+    }
+
+    function limpiarFormulario(){
+      ['nombre','descripcion','precio','stock','stock_minimo']
+        .forEach(id => document.getElementById(id).value = '');
+      toast('Formulario limpio');
+    }
+
+    async function agregarProductos() {
       const payload = {
         nombre: document.getElementById('nombre').value,
         descripcion: document.getElementById('descripcion').value,
-        // convertimos a número para evitar mandar string
         precio: Number(document.getElementById('precio').value),
         stock: Number(document.getElementById('stock').value),
         stock_minimo: Number(document.getElementById('stock_minimo').value)
       };
 
-      fetch(API, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
-      .then(async (res) => {
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.msg || 'Error al agregar producto');
-        return data;
-      })
-      .then(data => {
-        alert(data.msg || 'Producto agregado');
+      try {
+        const data = await apiFetch('/productos', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+
+        toast(data.msg || 'Producto agregado');
         obtenerProductos();
-      })
-      .catch(error => alert(error.message));
+      } catch (error) {
+        toast(error.message);
+      }
     }
 
-    function obtenerProductos() {
-      fetch(API)
-        .then(res => res.json())
-        .then(data => {
-          const lista = document.getElementById('lista');
-          lista.innerHTML = '';
+    async function obtenerProductos() {
+      try {
+        const data = await apiFetch('/productos');
 
-          if (data.exito && data.datos) {
-            data.datos.forEach(p => {
-              lista.innerHTML += `<li>[${p.id_producto}] ${p.nombre} - $${Number(p.precio).toFixed(2)} | Stock: ${p.stock}</li>`;
-            });
-          } else {
-            lista.innerHTML = '<li>No hay registros.</li>';
-          }
-        })
-        .catch(error => console.error('Error:', error));
+        const lista = document.getElementById('lista');
+        lista.innerHTML = '';
+
+        if (data.exito && data.datos && data.datos.length) {
+          data.datos.forEach(p => {
+            const li = document.createElement('li');
+            li.className = 'item';
+            li.innerHTML = `
+              <div class="top">
+                <div class="title">[${p.id_producto}] ${p.nombre}</div>
+                <span class="badge">$${Number(p.precio).toFixed(2)}</span>
+              </div>
+              <div class="meta">Stock: ${p.stock} · Mínimo: ${p.stock_minimo}</div>
+            `;
+            lista.appendChild(li);
+          });
+        } else {
+          lista.innerHTML = `<li class="item"><div class="meta">No hay registros.</div></li>`;
+        }
+      } catch (err) {
+        toast(err.message);
+      }
     }
 
-    function obtenerStockBajo() {
-      fetch(`${API}/stock-bajo`)
-        .then(res => res.json())
-        .then(data => {
-          const lista = document.getElementById('listaStockBajo');
-          lista.innerHTML = '';
+    async function obtenerStockBajo() {
+      try {
+        const data = await apiFetch('/productos/stock-bajo');
 
-          if (data.exito && data.datos) {
-            if (data.datos.length === 0) {
-              lista.innerHTML = '<li>No hay productos con stock bajo.</li>';
-              return;
-            }
-            data.datos.forEach(p => {
-              lista.innerHTML += `<li>[${p.id_producto}] ${p.nombre} | Stock: ${p.stock} | Mínimo: ${p.stock_minimo}</li>`;
-            });
-          } else {
-            lista.innerHTML = '<li>No hay datos.</li>';
+        const lista = document.getElementById('listaStockBajo');
+        lista.innerHTML = '';
+
+        if (data.exito && data.datos) {
+          if (data.datos.length === 0) {
+            lista.innerHTML = `<li class="item"><div class="meta">No hay productos con stock bajo.</div></li>`;
+            return;
           }
-        })
-        .catch(error => console.error('Error:', error));
+          data.datos.forEach(p => {
+            const li = document.createElement('li');
+            li.className = 'item';
+            li.innerHTML = `
+              <div class="top">
+                <div class="title">[${p.id_producto}] ${p.nombre}</div>
+                <span class="badge">Stock: ${p.stock}</span>
+              </div>
+              <div class="meta">Mínimo: ${p.stock_minimo}</div>
+            `;
+            lista.appendChild(li);
+          });
+        } else {
+          lista.innerHTML = `<li class="item"><div class="meta">No hay datos.</div></li>`;
+        }
+      } catch (err) {
+        toast(err.message);
+      }
     }
 
-    function obtenerMasVendidos() {
-      fetch(`${API}/mas-vendidos`)
-        .then(res => res.json())
-        .then(data => {
-          const lista = document.getElementById('listaMasVendidos');
-          lista.innerHTML = '';
+    async function obtenerMasVendidos() {
+      try {
+        const data = await apiFetch('/productos/mas-vendidos');
 
-          if (data.exito && data.datos) {
-            if (data.datos.length === 0) {
-              lista.innerHTML = '<li>No hay ventas registradas.</li>';
-              return;
-            }
-            data.datos.forEach(p => {
-              lista.innerHTML += `<li>[${p.id_producto}] ${p.nombre} | Total vendido: ${p.total_vendido}</li>`;
-            });
-          } else {
-            lista.innerHTML = '<li>No hay datos.</li>';
+        const lista = document.getElementById('listaMasVendidos');
+        lista.innerHTML = '';
+
+        if (data.exito && data.datos) {
+          if (data.datos.length === 0) {
+            lista.innerHTML = `<li class="item"><div class="meta">No hay ventas registradas.</div></li>`;
+            return;
           }
-        })
-        .catch(error => console.error('Error:', error));
+          data.datos.forEach(p => {
+            const li = document.createElement('li');
+            li.className = 'item';
+            li.innerHTML = `
+              <div class="top">
+                <div class="title">[${p.id_producto}] ${p.nombre}</div>
+                <span class="badge">Total: ${p.total_vendido}</span>
+              </div>
+              <div class="meta">Producto más vendido</div>
+            `;
+            lista.appendChild(li);
+          });
+        } else {
+          lista.innerHTML = `<li class="item"><div class="meta">No hay datos.</div></li>`;
+        }
+      } catch (err) {
+        toast(err.message);
+      }
     }
 
     // carga inicial
     obtenerProductos();
   </script>
-
 </body>
 </html>

@@ -1,17 +1,21 @@
-const pool = require('../config/db');
+// Ya NO uses el pool global aquí
+// const pool = require('../config/db');
+
+const getDb = (req) => {
+  if (!req.db) throw new Error('DB no inicializada en req.db (falta withDbRole en la ruta)');
+  return req.db;
+};
 
 /**
  * GET /productos
  */
 const obtenerProductos = async (req, res) => {
   try {
-    const [resultado] = await pool.query('SELECT * FROM productos');
-    res.json({
-      exito: true,
-      datos: resultado
-    });
+    const db = getDb(req);
+    const [resultado] = await db.query('SELECT * FROM productos');
+    return res.json({ exito: true, datos: resultado });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       exito: false,
       msg: 'Error en el servidor en Obtener Productos',
       error: error.message
@@ -24,13 +28,14 @@ const obtenerProductos = async (req, res) => {
  */
 const agregarProductos = async (req, res) => {
   try {
+    const db = getDb(req);
+
     const nombre = req.body.nombre;
     const descripcion = req.body.descripcion;
     const precio = req.body.precio;
     const stock = req.body.stock;
     const stock_minimo = req.body.stock_minimo;
 
-    // Validación básica (por tus CHECK en BD: precio > 0, stock >= 0)
     if (!nombre || !descripcion) {
       return res.status(400).json({ exito: false, msg: 'nombre y descripcion son requeridos' });
     }
@@ -44,18 +49,18 @@ const agregarProductos = async (req, res) => {
       return res.status(400).json({ exito: false, msg: 'stock_minimo debe ser >= 0' });
     }
 
-    const [resultado] = await pool.query(
+    const [resultado] = await db.query(
       'INSERT INTO productos (nombre, descripcion, precio, stock, stock_minimo) VALUES (?, ?, ?, ?, ?)',
       [nombre, descripcion, precio, stock, stock_minimo]
     );
 
-    res.status(201).json({
+    return res.status(201).json({
       exito: true,
       msg: 'Producto agregado correctamente',
       id_producto: resultado.insertId
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       exito: false,
       msg: 'Error en el servidor al Agregar Productos',
       error: error.message
@@ -68,6 +73,8 @@ const agregarProductos = async (req, res) => {
  */
 const editarProducto = async (req, res) => {
   try {
+    const db = getDb(req);
+
     const id_producto = parseInt(req.params.id_producto, 10);
     const nombre = req.body.nombre;
     const precio = req.body.precio;
@@ -77,7 +84,6 @@ const editarProducto = async (req, res) => {
       return res.status(400).json({ exito: false, msg: 'id_producto inválido' });
     }
 
-    // Validación básica
     if (nombre !== undefined && String(nombre).trim().length === 0) {
       return res.status(400).json({ exito: false, msg: 'nombre inválido' });
     }
@@ -88,7 +94,7 @@ const editarProducto = async (req, res) => {
       return res.status(400).json({ exito: false, msg: 'stock debe ser >= 0' });
     }
 
-    const [resultado] = await pool.query(
+    const [resultado] = await db.query(
       'UPDATE productos SET nombre=?, precio=?, stock=? WHERE id_producto=?',
       [nombre, precio, stock, id_producto]
     );
@@ -97,13 +103,13 @@ const editarProducto = async (req, res) => {
       return res.status(404).json({ exito: false, msg: 'Producto no encontrado' });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       exito: true,
       datos: resultado,
       msg: 'Producto editado correctamente'
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       exito: false,
       msg: 'Error al editar producto',
       error: error.message
@@ -116,13 +122,14 @@ const editarProducto = async (req, res) => {
  */
 const borrarProducto = async (req, res) => {
   try {
-    const id_producto = parseInt(req.params.id_producto, 10);
+    const db = getDb(req);
 
+    const id_producto = parseInt(req.params.id_producto, 10);
     if (!Number.isInteger(id_producto) || id_producto <= 0) {
       return res.status(400).json({ exito: false, msg: 'id_producto inválido' });
     }
 
-    const [resultado] = await pool.query(
+    const [resultado] = await db.query(
       'DELETE FROM productos WHERE id_producto = ?',
       [id_producto]
     );
@@ -131,13 +138,13 @@ const borrarProducto = async (req, res) => {
       return res.status(404).json({ exito: false, msg: 'Producto no encontrado' });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       exito: true,
       msg: 'Producto eliminado correctamente',
       id_producto
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       exito: false,
       msg: 'Error al eliminar producto',
       error: error.message
@@ -145,26 +152,23 @@ const borrarProducto = async (req, res) => {
   }
 };
 
-// -----------------------------------------------------------------------------
-// ENDPOINTS EXTRA basados en tu BD / lógica de inventario
-// -----------------------------------------------------------------------------
-
 /**
- * Productos con stock bajo (stock <= stock_minimo)
  * GET /productos/stock-bajo
  */
 const obtenerProductosStockBajo = async (req, res) => {
   try {
-    const [rows] = await pool.query(`
+    const db = getDb(req);
+
+    const [rows] = await db.query(`
       SELECT id_producto, nombre, stock, stock_minimo
       FROM productos
       WHERE stock <= stock_minimo
       ORDER BY stock ASC
     `);
 
-    res.json({ exito: true, datos: rows });
+    return res.json({ exito: true, datos: rows });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       exito: false,
       msg: 'Error en el servidor en Obtener Productos Stock Bajo',
       error: error.message
@@ -173,12 +177,13 @@ const obtenerProductosStockBajo = async (req, res) => {
 };
 
 /**
- * Productos más vendidos (consulta #2 de tu script)
  * GET /productos/mas-vendidos
  */
 const obtenerProductosMasVendidos = async (req, res) => {
   try {
-    const [rows] = await pool.query(`
+    const db = getDb(req);
+
+    const [rows] = await db.query(`
       SELECT p.id_producto, p.nombre, SUM(dv.cantidad) AS total_vendido
       FROM productos p
       JOIN detalle_ventas dv ON p.id_producto = dv.producto_id
@@ -186,9 +191,9 @@ const obtenerProductosMasVendidos = async (req, res) => {
       ORDER BY total_vendido DESC
     `);
 
-    res.json({ exito: true, datos: rows });
+    return res.json({ exito: true, datos: rows });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       exito: false,
       msg: 'Error en el servidor en Obtener Productos Más Vendidos',
       error: error.message
