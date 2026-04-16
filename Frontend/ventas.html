@@ -317,14 +317,13 @@
       <h1>Registrar venta</h1>
       <div class="actions">
         <a class="link" href="index.html">← Menú</a>
-        <span class="badge" title="API base">API: http://localhost:4000/api/venta</span>
       </div>
     </header>
 
     <main>
       <div class="grid">
         <section class="card">
-          <h2>Datos de la venta <span class="badge">POST</span></h2>
+          <h2>Datos de la venta</h2>
           <p class="hint">Primero captura cliente/empleado/sucursal, luego agrega productos y finalmente registra la venta.</p>
 
           <div class="form">
@@ -371,7 +370,7 @@
 
       <div class="split">
         <section class="card">
-          <h2>Clientes con clasificación <span class="badge">GET /clientes/clasificacion</span></h2>
+          <h2>Clientes con clasificación</h2>
           <div class="section-actions">
             <button class="btn-secondary" onclick="verClasificacion()" type="button">Ver</button>
           </div>
@@ -379,7 +378,7 @@
         </section>
 
         <section class="card">
-          <h2>Compras superiores al promedio <span class="badge">GET /clientes/compras/superiores-promedio</span></h2>
+          <h2>Compras superiores al promedio</h2>
           <div class="section-actions">
             <button class="btn-secondary" onclick="verSuperiorPromedio()" type="button">Ver</button>
           </div>
@@ -388,7 +387,7 @@
       </div>
 
       <section class="card">
-        <h2>Historial por cliente <span class="badge">GET /clientes/:id/historial</span></h2>
+        <h2>Historial por cliente</h2>
         <div class="section-actions">
           <div class="field half" style="margin: 0;">
             <label for="historial_id_cliente">id_cliente</label>
@@ -400,7 +399,7 @@
       </section>
 
       <section class="card">
-        <h2>Ventas con total calculado <span class="badge">GET /reportes/ventas-total-calculado</span></h2>
+        <h2>Ventas con total calculado</h2>
         <p class="hint">Compara el total guardado en <b>ventas.total</b> contra el total calculado con <b>calcular_total_venta(id_venta)</b>.</p>
 
         <div class="section-actions">

@@ -291,7 +291,7 @@
       <h1>Clientes</h1>
       <div class="actions">
         <a class="link" href="index.html">← Menú</a>
-        <span class="badge" title="API base">API: http://localhost:4000/api/clientes</span>
+       
       </div>
     </header>
 
@@ -299,7 +299,7 @@
       <div class="grid">
         <!-- FORM -->
         <section class="card">
-          <h2>Agregar cliente <span class="badge">POST</span></h2>
+          <h2>Agregar cliente</h2>
           <p class="hint">Completa los datos y presiona <b>Guardar</b>. Al finalizar se actualizará el listado.</p>
 
           <div class="form">
@@ -358,21 +358,19 @@
               <button class="btn-secondary" onclick="limpiarFormulario()" type="button">Limpiar</button>
               <button class="btn-secondary" onclick="obtenerClientes()" type="button">Actualizar listado</button>
             </div>
-
-            <p class="small-note">Tip: si tu API ahora pide token y te da 401, primero haz login.</p>
           </div>
         </section>
 
         <!-- LISTADO -->
         <section class="card">
-          <h2>Listado de clientes <span class="badge">GET</span></h2>
+          <h2>Listado de clientes</h2>
           <p class="hint">Se carga automáticamente al abrir la página.</p>
           <ul id="lista" class="list"></ul>
         </section>
       </div>
 
       <section class="card">
-        <h2>Clientes con clasificación <span class="badge">GET /clasificacion</span></h2>
+        <h2>Clientes con clasificación</h2>
         <div class="section-actions">
           <button class="btn-secondary" onclick="obtenerClientesClasificacion()" type="button">Ver clasificación</button>
         </div>
@@ -380,7 +378,7 @@
       </section>
 
       <section class="card">
-        <h2>Compras superiores al promedio <span class="badge">GET /compras/superiores-promedio</span></h2>
+        <h2>Compras superiores al promedio</h2>
         <div class="section-actions">
           <button class="btn-secondary" onclick="obtenerClientesSuperiorPromedio()" type="button">Ver</button>
         </div>
@@ -388,7 +386,7 @@
       </section>
 
       <section class="card">
-        <h2>Historial por cliente <span class="badge">GET /:id_cliente/historial</span></h2>
+        <h2>Historial por cliente</h2>
 
         <div class="section-actions">
           <div class="field" style="min-width: min(380px, 100%); margin: 0;">

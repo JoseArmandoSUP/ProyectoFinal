@@ -302,7 +302,6 @@
       <h1>Sucursales</h1>
       <div class="actions">
         <a class="link" href="index.html">← Menú</a>
-        <span class="badge" title="API base">API: http://localhost:4000/api/sucursales</span>
       </div>
     </header>
 
@@ -310,8 +309,7 @@
       <div class="grid">
         <!-- FORM -->
         <section class="card">
-          <h2>Agregar sucursal <span class="badge">POST</span></h2>
-          <p class="hint">Crea una sucursal. Ten cuidado: si borras una sucursal, tu BD tiene <b>ON DELETE CASCADE</b> en empleados/ventas.</p>
+          <h2>Agregar sucursal</h2>
 
           <div class="form">
             <div class="field">
@@ -344,7 +342,7 @@
 
         <!-- LISTADO -->
         <section class="card">
-          <h2>Listado de sucursales <span class="badge">GET</span></h2>
+          <h2>Listado de sucursales</h2>
           <p class="hint">Se carga automáticamente al abrir la página.</p>
           <ul id="lista" class="list"></ul>
         </section>
@@ -352,7 +350,7 @@
 
       <div class="split">
         <section class="card">
-          <h2>Mayores ingresos <span class="badge">GET /reportes/mayores-ingresos</span></h2>
+          <h2>Mayores ingresos</h2>
           <div class="section-actions">
             <button class="btn-secondary" type="button" onclick="verMayoresIngresos()">Ver</button>
           </div>
@@ -360,7 +358,7 @@
         </section>
 
         <section class="card">
-          <h2>Ventas por sucursal (vista) <span class="badge">GET /reportes/ventas-por-sucursal-vista</span></h2>
+          <h2>Ventas por sucursal (vista)</h2>
           <div class="section-actions">
             <button class="btn-secondary" type="button" onclick="verVentasPorSucursalVista()">Ver</button>
           </div>
@@ -369,7 +367,7 @@
       </div>
 
       <section class="card">
-        <h2>Buscar / Eliminar <span class="badge">GET /:id · DELETE /:id</span></h2>
+        <h2>Buscar / Eliminar</h2>
 
         <div class="section-actions">
           <div class="field" style="min-width: min(380px, 100%); margin: 0;">
