@@ -279,7 +279,7 @@ SELECT id_empleado, nombre, ventasXempleado(id_empleado) FROM empleados; -- cons
 
 -- 1. VENTAS POR EMPLEADO
 
--- VERSION EN LA QUE SE HACE TODO EL PRCOESO EN LA VISTA  -------> [IVAN]
+-- VERSION EN LA QUE SE HACE TODO EL PRCOESO EN LA VISTA 
 -- Se crea una vista llamada ventas_por_empleado
 CREATE VIEW ventas_por_empleado AS
 -- Seleccionamos los campos que queremos mostrar
@@ -299,7 +299,7 @@ JOIN ventas v ON e.id_empleado = v.empleado_id
 GROUP BY e.id_empleado, nombre_empleado;
 
 
--- VERSION EN LA QUE SOLO SE MANDA A LLAMAR LA FUNCION ventasXempleado DE MAS ABAJO -------> [DIEGO HERNANDEZ]
+-- VERSION EN LA QUE SOLO SE MANDA A LLAMAR LA FUNCION ventasXempleado DE MAS ABAJO
 CREATE VIEW vista_ventas_empleado AS
 SELECT id_empleado, nombre, ventasXempleado(id_empleado) AS total_vendido FROM empleados; -- aqui se crea la vista para la funcion
 SELECT*FROM vista_ventas_empleado; -- consulta para la vista creada
