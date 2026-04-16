@@ -1,4 +1,3 @@
-// No uses pool global; usa req.db (inyectado por middleware withDbRole)
 const getDb = (req) => {
   if (!req.db) throw new Error('DB no inicializada en req.db (falta withDbRole en la ruta)');
   return req.db;
@@ -8,7 +7,7 @@ const getDb = (req) => {
 const getConn = async (db) => {
   // Pool mysql2/promise tiene getConnection()
   if (typeof db.getConnection === 'function') return db.getConnection();
-  // Si ya te pasaron una conexión (no recomendado), úsala igual
+  // Si ya pasaron una conexión, se usa igual
   if (typeof db.beginTransaction === 'function' && typeof db.query === 'function') return db;
   throw new Error('req.db no es un pool/connection compatible con mysql2/promise');
 };
@@ -93,7 +92,7 @@ const registrarVenta = async (req, res) => {
         [cantidad, producto_id]
       );
 
-      // Si no encontró el producto, es mejor fallar y hacer rollback
+      // Si no encontró el producto, hace rollback
       if (rUpd.affectedRows === 0) {
         throw new Error(`No existe el producto con id ${producto_id} (no se actualizó stock)`);
       }

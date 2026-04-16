@@ -5,7 +5,7 @@ const clientesController = require('../controllers/clientesController');
 const { requireAuth } = require('../middlewares/auth');
 const { withDbRole } = require('../middlewares/withDbRole');
 
-// Importante: primero rutas específicas
+// Primero rutas específicas
 router.get('/compras/superiores-promedio', requireAuth, withDbRole, clientesController.clientesComprasSuperioresPromedio);
 router.get('/clasificacion', requireAuth, withDbRole, clientesController.obtenerClientesConClasificacion);
 router.get('/:id_cliente/historial', requireAuth, withDbRole, clientesController.obtenerHistorialCliente);

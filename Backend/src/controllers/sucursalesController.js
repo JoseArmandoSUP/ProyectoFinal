@@ -1,4 +1,3 @@
-// Ya NO uses el pool global aquí
 // const pool = require('../config/db');
 
 const getDb = (req) => {
@@ -6,9 +5,6 @@ const getDb = (req) => {
   return req.db;
 };
 
-// =======================================================
-// CRUD BÁSICO
-// =======================================================
 
 // GET /api/sucursales
 const getSucursales = async (req, res) => {
@@ -117,9 +113,7 @@ const deleteSucursal = async (req, res) => {
   }
 };
 
-// =======================================================
 // CONSULTAS / REPORTES
-// =======================================================
 
 // GET /api/sucursales/reportes/mayores-ingresos
 const getSucursalesMayoresIngresos = async (req, res) => {

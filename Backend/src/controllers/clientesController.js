@@ -1,7 +1,6 @@
-// Ya NO importes el pool global aquí
 // const pool = require('../config/db');
 
-// Helpers simples (opcionales, puedes quitarlos si no los quieres)
+// Helpers simples (opcionales)
 const isNonEmptyString = (v) => typeof v === 'string' && v.trim().length > 0;
 const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v || '').trim());
 const isDateYYYYMMDD = (v) => /^\d{4}-\d{2}-\d{2}$/.test(String(v || '').trim());

@@ -5,7 +5,7 @@ const productosController = require('../controllers/productosController');
 const { requireAuth } = require('../middlewares/auth');
 const { withDbRole } = require('../middlewares/withDbRole');
 
-// Primero rutas específicas
+// Rutas específicas
 router.get('/stock-bajo', requireAuth, withDbRole, productosController.obtenerProductosStockBajo);
 router.get('/mas-vendidos', requireAuth, withDbRole, productosController.obtenerProductosMasVendidos);
 

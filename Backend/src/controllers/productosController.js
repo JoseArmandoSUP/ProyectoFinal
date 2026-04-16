@@ -1,4 +1,3 @@
-// Ya NO uses el pool global aquí
 // const pool = require('../config/db');
 
 const getDb = (req) => {

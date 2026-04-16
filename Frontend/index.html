@@ -293,11 +293,10 @@
   </div>
 
   <script>
-    // MODIFICADO:
     // - Si no hay token, NO redirige en bucle: muestra aviso y manda a login.
     // - Si hay token, muestra sesión.
     // - Ajusta UI por rol.
-    // Nota: esto solo controla la UI; la seguridad real debe estar en backend.
+    // Solo controla la UI
     (function initSession(){
       const token = localStorage.getItem('token');
       const role = localStorage.getItem('role');
@@ -329,7 +328,7 @@
         if (sucursales) sucursales.style.display = 'none';
       }
 
-      // Si quieres forzar restricciones visuales para analista, descomenta:
+      // Si hay que forzar restricciones visuales para analista, descomentar:
       // if (role === 'analista') {
       //   const ventas = document.getElementById('card-ventas');
       //   if (ventas) ventas.style.display = 'none';
